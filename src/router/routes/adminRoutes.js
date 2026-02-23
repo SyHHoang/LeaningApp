@@ -18,6 +18,11 @@ export default [
         name: 'AddExam',
         component: () => import('@/pages/adminPages/examManage/addExam.vue'),
       },
+      {
+        path: 'exams/:id/edit',
+        name: 'EditExam',
+        component: () => import('@/pages/adminPages/examManage/editExam.vue'),
+      },
     ],
   },
 ]
