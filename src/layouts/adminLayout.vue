@@ -1,6 +1,7 @@
 <template>
-<addExam></addExam>
+  <div class="admin-layout">
+    <router-view />
+  </div>
 </template>
 <script setup>
-import addExam from '@/pages/adminPages/examManage/addExam.vue';
 </script>
