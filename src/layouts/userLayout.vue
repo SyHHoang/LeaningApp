@@ -1,7 +1,9 @@
 <template>
-<practicePages></practicePages>
+<userHeader></userHeader>
+<homePage></homePage>
 </template>
 <script setup>
-import practicePages from '@/pages/userPages/practicePages.vue';
+import userHeader from '@/components/header/userHeader.vue';
+import homePage from '@/pages/userPages/homePage.vue';
 
 </script>

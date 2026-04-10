@@ -1,440 +1,797 @@
 <template>
-  <div class="edit-exam-page">
+  <div class="add-exam-page">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h3 mb-0">Sửa đề thi JLPT</h1>
+      <h1 class="h3 mb-0">Thêm đề thi</h1>
       <router-link to="/admin/exams" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>
         Quay lại danh sách
       </router-link>
     </div>
-
-    <div v-if="loadError" class="alert alert-danger">{{ loadError }}</div>
-
-    <template v-else-if="!loading">
-      <!-- Bước 1: Chọn mức độ -->
-      <div v-if="stepStatus === 1" class="step-card card shadow-sm">
-        <div class="card-body">
-          <h2 class="h5 mb-3">Bước 1: Chọn mức độ</h2>
-          <select v-model="examLevel" class="form-select form-select-lg mb-3">
-            <option value="N5">N5</option>
-            <option value="N4">N4</option>
-            <option value="N3">N3</option>
-            <option value="N2">N2</option>
-            <option value="N1">N1</option>
-          </select>
-          <button type="button" class="btn btn-primary" @click="stepStatus = 2">Tiếp tục</button>
-        </div>
-      </div>
-
-      <!-- Bước 2: Thông tin đề thi -->
-      <div v-if="stepStatus === 2" class="step-card card shadow-sm">
-        <div class="card-body">
-          <h2 class="h5 mb-3">Bước 2: Thông tin đề thi</h2>
-          <div class="mb-3">
-            <label class="form-label">Tiêu đề đề thi</label>
-            <input
-              v-model="examForm.title"
-              type="text"
-              class="form-control"
-              placeholder="Ví dụ: Đề thi thử JLPT N5 - Đợt 1"
-            />
-          </div>
-          <div class="table-responsive">
-            <table class="table table-bordered">
-              <thead class="table-light">
-                <tr>
-                  <th>Phần thi</th>
-                  <th>Số câu hỏi</th>
-                  <th>Thời gian (phút)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Từ vựng</td>
-                  <td><input v-model.number="examForm.structure.vocabulary.count" type="number" min="0" class="form-control form-control-sm" /></td>
-                  <td><input v-model.number="examForm.structure.vocabulary.duration" type="number" min="0" class="form-control form-control-sm" /></td>
-                </tr>
-                <tr>
-                  <td>Đọc hiểu</td>
-                  <td><input v-model.number="examForm.structure.reading.count" type="number" min="0" class="form-control form-control-sm" /></td>
-                  <td><input v-model.number="examForm.structure.reading.duration" type="number" min="0" class="form-control form-control-sm" /></td>
-                </tr>
-                <tr>
-                  <td>Nghe hiểu</td>
-                  <td><input v-model.number="examForm.structure.listening.count" type="number" min="0" class="form-control form-control-sm" /></td>
-                  <td><input v-model.number="examForm.structure.listening.duration" type="number" min="0" class="form-control form-control-sm" /></td>
-                </tr>
-                <tr class="table-secondary fw-bold">
-                  <td>Tổng</td>
-                  <td>{{ totalQuestions }}</td>
-                  <td>{{ totalDuration }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p v-if="step2Error" class="text-danger small">{{ step2Error }}</p>
-          <button type="button" class="btn btn-primary me-2" @click="stepStatus = 1">Quay lại</button>
-          <button type="button" class="btn btn-primary" @click="goToStep3">Tiếp tục</button>
-        </div>
-      </div>
-
-      <!-- Bước 3: Thêm câu hỏi & Lưu -->
-      <div v-if="stepStatus === 3" class="step-card">
-        <div class="card shadow-sm mb-4">
-          <div class="card-body">
-            <h2 class="h5">Đề thi: {{ examForm.title }}</h2>
-            <p class="mb-0">Mức độ: <strong>{{ examLevel }}</strong></p>
-            <p class="mb-0">Tổng số câu: <strong>{{ totalQuestions }}</strong></p>
-            <p class="mb-0">Thời gian làm bài: <strong>{{ totalDuration }}</strong> phút</p>
-            <p class="text-muted small mt-2">Cần thêm đủ <strong>{{ totalQuestions }}</strong> câu hỏi (hiện có {{ questionList.length }}).</p>
-          </div>
-        </div>
-
-        <div class="add-exam-content row g-4">
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-header">Danh sách câu hỏi</div>
-              <div class="card-body">
-                <div v-for="(n, index) in questionList" :key="index" class="border rounded p-3 mb-3">
-                  <div class="d-flex justify-content-end gap-1 mb-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="editQuestion(index)">Sửa</button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" @click="deleteQuestion(index)">Xóa</button>
-                  </div>
-                  <p class="mb-1"><strong>Câu {{ index + 1 }}:</strong> {{ n.questionText || '(Chưa có nội dung)' }}</p>
-                  <img v-if="n.urlLocal || n.image?.imageUrl" :src="n.urlLocal || n.image?.imageUrl" alt="Hình" class="img-thumbnail mb-2" style="max-height: 120px" />
-                  <p v-if="n.audio?.audioUrl" class="small text-muted mb-1">Âm thanh: {{ n.audio.audioUrl }}</p>
-                  <p class="small mb-0">Đáp án đúng: {{ (n.options && n.options[n.correctAnswer]) || '—' }}</p>
-                </div>
-                <p v-if="questionList.length === 0" class="text-muted">Chưa có câu hỏi nào. Thêm bên dưới.</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card shadow-sm">
-              <div class="card-header">Thêm câu hỏi (Câu {{ questionIndex }})</div>
-              <div class="card-body">
-                <div class="mb-3">
-                  <label class="form-label">Nội dung câu hỏi <span class="text-danger">*</span></label>
-                  <input v-model="question.questionText" type="text" class="form-control" placeholder="Nhập nội dung câu hỏi" />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Hình ảnh (tùy chọn)</label>
-                  <input type="file" accept="image/*" class="form-control" @change="onFileChange" />
-                  <img v-if="question.urlLocal" :src="question.urlLocal" alt="Preview" class="img-thumbnail mt-2" style="max-height: 150px" />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">URL âm thanh (tùy chọn)</label>
-                  <input v-model="question.audio.audioUrl" type="text" class="form-control" placeholder="https://..." />
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Các đáp án <span class="text-danger">*</span></label>
-                  <div v-for="(_, idx) in 4" :key="idx" class="input-group mb-2">
-                    <span class="input-group-text">Đáp án {{ idx + 1 }}</span>
-                    <input v-model="question.options[idx]" type="text" class="form-control" :placeholder="'Nội dung đáp án ' + (idx + 1)" />
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Đáp án đúng</label>
-                  <select v-model.number="question.correctAnswer" class="form-select">
-                    <option v-for="(_, idx) in 4" :key="idx" :value="idx">Đáp án {{ idx + 1 }}</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Giải thích đáp án (tùy chọn)</label>
-                  <textarea v-model="question.explanation" class="form-control" rows="2" placeholder="Giải thích đáp án" />
-                </div>
-                <button type="button" class="btn btn-success" :disabled="!canAddQuestion" @click="createQuestion">Lưu câu hỏi</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-4 d-flex align-items-center gap-3">
-          <button type="button" class="btn btn-outline-secondary" @click="stepStatus = 2">Quay lại bước 2</button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            :disabled="isSubmitting || questionList.length !== totalQuestions"
-            @click="submitExam"
-          >
-            <span v-if="isSubmitting">Đang lưu...</span>
-            <span v-else>Lưu đề thi</span>
-          </button>
-          <span v-if="questionList.length !== totalQuestions" class="text-muted small">Thêm đủ {{ totalQuestions }} câu hỏi để có thể lưu.</span>
-        </div>
-      </div>
-    </template>
-
-    <div v-else class="text-center py-5">
-      <div class="spinner-border text-primary"></div>
+    <p>Thông tin đề thi</p>
+    <label>Tên đề thi</label>
+    <input type="text" v-model="examInfo.title">
+    <label>Trình độ</label>
+    <select v-model="examInfo.level">
+        <option value="A1">A1</option>
+        <option value="A2">A2</option>
+        <option value="B1">B1</option>
+        <option value="B2">B2</option>
+        <option value="C1">C1</option>
+        <option value="C2">C2</option>
+        <option value="None">None</option>
+    </select>
+    <div>
+      <button @click="openForm(1,'',null)">Thêm phần thi</button>
     </div>
+    <!-- List -->
+    <div>
+        <div v-if="partList.length === 0">Chưa có phần nào</div>
+        <div v-else>
+          <div v-for="(part, index) in partList" :key="index">
+
+            <p>Phần {{ index + 1 }} </p>
+         <div>
+        <button @click="openForm(4,part,index,null,null)">Sửa</button>
+        <button @click="deleteForm(1,index,null,null)">Xóa</button>
+        <button v-if="part.type==='many'" @click="openForm(2,null,index,null,null)">Thêm khối câu hỏi</button>
+        <button v-if="part.type==='one'" @click="openForm(3,null,index,null,null)">Thêm câu hỏi</button>
+        </div>
+            <p><b>Tiêu đề:</b> {{ part.title }}</p>
+            <p><b>Loại:</b> {{ part.type==='one'?'Câu hỏi đơn':'Khối câu hỏi' }}</p>
+            <p><b>Nội dung:</b> {{ part.content }}</p>
+            <p><b>Thời gian:</b> {{ part.time }} (phút)</p>
+            <div v-if="part.imageUrlLocal||part.imageUrl">
+              <img :src="part.imageUrlLocal||part.imageUrl"" style="max-width:200px"/>
+            </div>
+            <div v-if="part.audioUrlLocal||part.audioUrl">
+              <audio :src="part.audioUrlLocal||part.audioUrl" controls></audio>
+            </div>
+            <hr/>
+            <!-- Danh sách khối câu hỏi -->
+                  <div v-if="part.type==='many'">
+                      <div class="block-list" v-for="(block,blockIndex) in part.questionList" :key="blockIndex">
+                          <div class="block"><p>{{ block.content }}</p><button @click="openForm(5,block,index,blockIndex,null)">Sửa</button>
+                            <button @click="deleteForm(2,index,null,null)">Xóa</button>
+                          <img v-if="block.imageUrlLocal||block.imageUrl" :src="block.imageUrlLocal||block.imageUrl" style="max-width:200px"/>
+                          <audio v-if="block.audioUrlLocal||block.audioUrl" :src="block.audioUrlLocal||block.audioUrl" controls></audio>
+                          <button @click="openForm(7,null,index,blockIndex,null)">Thêm câu hỏi con</button></div>
+                          <div class="block-question" v-for="(question,questionIndex) in block.question" :key='questionIndex'>
+                              <p>{{ question.questionText }}</p><button @click="openForm(8,question,index,blockIndex,questionIndex)">Sửa</button>
+                              <button @click="deleteForm(3,index,index,blockIndex,questionIndex)">Xóa</button>
+                              <p v-for="(option,optionIndex) in question.options" :key="optionIndex">{{optionIndex+1}}. {{ option }}</p>
+                              <p>Đáp án đúng: {{question.correctAnswer}}</p>
+                              <p>Giải thích đáp án: {{ question.explaination }}</p>
+                              <p>Điểm: {{ question.score }}</p>
+                          </div>
+
+                      </div>
+                  </div>
+             <!-- Danh sách câu hỏi -->
+                  <div v-if="part.type==='one'">
+                      <div v-for="(question,questionIndex) in part.questionList" :key="questionIndex">
+                        <p>{{ question.questionText }}</p><button @click="openForm(6,question,index,null,questionIndex)">Sửa</button>
+                        <button @click="deleteForm(4,index,null,questionIndex)">Xóa</button>
+                        <img v-if="question.image.imageUrlLocal||question.image.imageUrl" :src="question.image.imageUrlLocal||question.image.imageUrl" style="max-width: 200px;"/>
+                        <audio v-if="question.audio.audioUrlLocal||question.audio.audioUrl" :src="question.audio.audioUrlLocal||question.audio.audioUrl" controls></audio>
+                        <div>
+                            <p v-for="(n,optionIndex) in question.options" :key="n">{{optionIndex+1}}. {{ n }}</p>
+                        </div>
+                        <p>Đáp án đúng: {{ question.correctAnswer }}</p>
+                        <p>Giải thích: {{ question.explaination }}</p>
+                        <p>Điểm: {{ question.score }}</p>
+                      </div>
+                  </div>
+          </div>
+        </div>
+    </div>
+    <div>
+    </div>
+    <!-- ///////////////Phần modal -->
+    <div v-if="partModalStatus" class="form">
+      <button @click="closeForm(1)">Đóng</button>
+      <label>Tên phần thi</label>
+      <input type="text" v-model="partForm.title"/>
+      <label>Loại câu hỏi</label>
+      <select v-model="partForm.type">
+        <option value="one">Câu hỏi đơn</option>
+        <option value="many">Khối câu hỏi</option>
+      </select>
+      <label>Thời gian (phút)</label>
+      <input type="number" min="0" v-model="partForm.time"/>
+      <label>Hình ảnh</label>
+      <input type="file" @change="handlePartImageChange"/>
+      <img v-if='partForm.imageUrlLocal||partForm.imageUrl' :src="partForm.imageUrlLocalpartForm.imageUrl" style="max-width:200px"/>
+      <label>Audio</label><button>Xóa Audio</button>
+      <input type="file" @change="handlePartAudioChange"/>
+      <audio v-if='partForm.audioUrlLocal||partForm.audioUrl' :src="partForm.audioUrlLocalpartForm.audioUrl" controls></audio>
+      <label>Nội dung</label>
+      <input type="text" v-model="partForm.content"/>
+      <button v-if="isAdd" @click="addPart">Xác nhận thêm</button>
+      <button v-if="!isAdd" @click="updatePart">Xác nhận sửa</button>
+    </div>
+    <!-- modal khối câu hỏi -->
+     <div v-if="blockModalStatus" class="form">
+      <button @click="closeForm(2)">Đóng</button>
+      <div>
+        <label>Nội dung khối</label>
+        <input type="text" v-model="blockForm.content"/>
+        <label>Ảnh</label>
+        <input type="file" accept="image/*" @change="blockImageChange"/>
+        <img v-if="blockForm.imageUrlLocal||blockForm.imageUrl" :src="blockForm.imageUrlLocalblockForm.imageUrl" style="max-width:200px"/>
+        <label>Audio</label>
+        <input type="file" accept="audio/*" @change="blockAudioChange" controls/>
+        <audio v-if='blockForm.audioUrlLocal||blockForm.audioUrl' controls :src="blockForm.audioUrlLocal||blockForm.audioUrl"></audio>
+        <button v-if='isAdd' @click="addBlock">Xác nhận thêm</button>
+        <button v-if='!isAdd' @click="updateBlock">Xác nhận sửa</button>
+        <!-- <label>Câu hỏi con</label><button @click="blockQuestionCount++">Thêm câu hỏi con</button>
+          <div v-for="n in blockQuestionCount" :key="n">
+            <label>Câu hỏi</label>
+            <input type="text" v-model="blockForm.question[n-1].questionText"/>
+            <label>Câu trả lời</label>
+              <div v-for="m in 4" :key="m">
+              <p>{{ m }} <input type="text" v-model="blockForm.question[n-1].options[m-1]"/></p>
+              </div>
+            <label>Đáp án</label>
+            <select v-model="blockForm.question[n-1].correctAnswer">
+              <option v-for="k in 4" :key="k">{{ k }}</option>
+            </select>
+            <label>Giải thích</label>
+            <input type="text" v-model="blockForm.question[n-1].explaination"/>
+            <label>Điểm</label>
+            <input type="text" v-model="blockForm.question[n-1].score"/>
+          </div> -->
+      </div>
+     </div>
+     <!-- modal câu hỏi con của block -->
+      <div v-if="questionBlockModalStatus" class="form">
+        <button @click="closeForm()">Đóng</button>
+         <div>
+          <label>Câu hỏi</label>
+          <input type="text" v-model="questionBlockForm.questionText"/>
+          <label>Câu trả lời</label>
+          <div v-for="n in 4" :key="n">
+            <p>{{ n }}. <input type="text" v-model="questionBlockForm.options[n-1]"/></p>
+          </div>
+          <label>Đáp án đúng</label>
+          <select v-model="questionBlockForm.correctAnswer">
+            <option v-for="n in 4" :key="n" >{{ n }}</option>
+          </select>
+          <label>Giải thích</label>
+          <input type="text" v-model="questionBlockForm.explaination"/>
+          <label>Điểm</label>
+          <input type="number" v-model="questionBlockForm.score"/>
+          <button v-if="isAdd" @click="addQuestionToBlock">Xác nhận thêm</button>
+          <button v-if="!isAdd" @click="updateQuestionToBlock">Xác nhận sửa</button>
+        </div>
+      </div>
+     <!-- modal câu hỏi đơn -->
+      <div v-if="questionModalStatus" class="form">
+        <button @click="closeForm(3)">Đóng</button>
+        <div>
+          <label>Câu hỏi</label>
+          <input type="text" v-model="questionForm.questionText"/>
+          <label>Ảnh</label>
+          <input type="file" accept="image/*" @change="questionImageChange"/>
+          <img v-if="questionForm.image.imageUrlLocal||questionForm.image.imageUrl" :src="questionForm.image.imageUrlLocal||questionForm.image.imageUrl" style="max-width:200px;"/>
+          <label>Audio</label>
+          <input type="file" accept="audio/*" @change="questionAudioChange"/>
+          <audio v-if="questionForm.audio.audioUrlLocal||questionForm.audio.audioUrl" :src="questionForm.audio.audioUrlLocal||questionForm.audio.audioUrl" controls></audio>
+          <label>Câu trả lời</label>
+          <div v-for="n in 4" :key="n">
+            <p>{{ n }}. <input type="text" v-model="questionForm.options[n-1]"/></p>
+          </div>
+          <label>Đáp án đúng</label>
+          <select v-model="questionForm.correctAnswer">
+            <option v-for="n in 4" :key="n" >{{ n }}</option>
+          </select>
+          <label>Giải thích</label>
+          <input type="text" v-model="questionForm.explaination"/>
+          <label>Điểm</label>
+          <input type="number" v-model="questionForm.score"/>
+          <button v-if='isAdd' @click="addQuestion">Xác nhận</button>
+          <button v-if='!isAdd' @click="updateQuestion">Xác nhận sửa</button>
+        </div>
+      </div>
+      <!-- Modal xác nhận xóa -->
+       <div v-if="deleteModalStatus">
+        <p>Bạn có chắc muốn xóa phần này?</p>
+        <i @click="closeForm(5)"></i>
+        <button @click="doDelete">Xác nhận</button>
+        <button @clik="closeForm(5)">Hủy bỏ</button>
+       </div>
+    <div><button @click="addExam">Thêm đề thi</button></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import sendImageKit from '@/services/imageService';
 import axiosInstance from '@/services/axiosService';
+import { uploadAudio } from '@/services/audioSerrvice';
+import { alertService } from '@/services/alertService';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute} from 'vue-router';
 
+////
+//Thêm, sửa, hay xóa 1 cái là cập nhật liền chứ ko đợi sửa hết, thêm hết rồi mới gửi data
 const route = useRoute();
-const router = useRouter();
 const examId = computed(() => route.params.id);
-
-const examLevel = ref('N5');
-const examForm = ref({
-  title: '',
-  level: 'N5',
-  structure: {
-    vocabulary: { count: 0, duration: 0 },
-    reading: { count: 0, duration: 0 },
-    listening: { count: 0, duration: 0 },
-  },
-});
-const questionList = ref([]);
-const fileList = ref([]);
-const currentFile = ref(null);
-const question = ref(getEmptyQuestion());
-const stepStatus = ref(1);
-const questionIndex = ref(1);
-const step2Error = ref('');
-const isSubmitting = ref(false);
-const editingIndex = ref(null);
-const loading = ref(true);
-const loadError = ref('');
-
-function getEmptyQuestion() {
+/////////////////////////
+const getEmptyPart=()=>{
+  return{
+    title:'',
+    type:'one',
+    content:'',
+    imageFile:null,
+    imageUrlLocal:'',
+    imageUrl:'',
+    imageId:'',
+    audioFile:null,
+    audioUrlLocal:'',
+    audioUrl:'',
+    audioId:'',
+    questionList:[],
+    time:0
+  }
+}
+const getEmptyBlock=()=>{
   return {
-    questionText: '',
-    urlLocal: '',
-    image: { imageUrl: '', imageId: '' },
-    audio: { audioUrl: '', audioId: '' },
-    videoUrl: '',
-    options: ['', '', '', ''],
-    correctAnswer: 0,
-    explanation: '',
-    score: 1,
-  };
+    content:'',
+    imageFile:null,
+    imageUrlLocal:'',
+    imageUrl:'',
+    imageId:'',
+    audioFile:null,
+    audioUrlLocal:'',
+    audioUrl:'',
+    audioId:'',
+    question:[
+      // {
+      //   questionText:'',
+      //   options:[],
+      //   correctAnswer:0,
+      //   explaination:'',
+      //   score:0
+      // }
+    ]
+  }
+}
+const getEmptyBlockQuestion=()=>{
+  return{
+    questionText:'',
+    options:[],
+    correctAnswer:0,
+    explaination:'',
+    score:0
+  }
+}
+const getEmptyQuestion=()=>{
+  return {
+    questionText:'',
+    image:{
+      imageFile:null,
+      imageUrlLocal:'',
+      imageUrl:'',
+      imageId: '',
+    },
+    audio:{
+      audioFile:'',
+      audioUrlLocal:'',
+      audioUrl:'',
+      audioId: '',
+    },
+    options:[],
+    correctAnswer:0,
+    explaination:'',
+    score:0
+  }
+}
+const partForm=ref(getEmptyPart())
+const blockForm=ref(getEmptyBlock())
+const questionForm=ref(getEmptyQuestion())
+const questionBlockForm=ref(getEmptyBlockQuestion())
+const partList=ref([])
+const examInfo=ref({
+  title:'',
+  level:'None'
+})
+/////////////////////////
+//edit list
+const addPartList=ref([])//block, question part mới thêm sẽ được push vào đây
+const updatePartList=ref([])
+const deletePartList=ref([])
+
+const addBlockList=ref([])
+const updateBlockList=ref([])
+const deleteBlockList=ref([])
+
+const addQuestionList=ref([])
+const updateQuestionList=ref([])
+const deleteQuestionList=ref([])
+/////////////////////////
+const partModalStatus=ref(false)
+const blockModalStatus=ref(false)
+const questionModalStatus=ref(false)
+const questionBlockModalStatus=ref(false)
+const deleteModalStatus=ref(false)
+const isAdd=ref(true)
+const deleteType=ref(null)//xác định xóa cái nào
+//index//
+const selectedPart=ref(null)//dùng để xác định phần thi thêm câu hỏi
+const selectedBlock=ref(null)
+const selectedQuestion=ref(null)//dùng chung cho cau hỏi con và câu hỏi đơn
+////////
+const openForm=(type,data,partIndex,blockIndex,questionIndex)=>{
+  console.log("part index",partIndex)
+  console.log("block index",blockIndex)
+  console.log("question index",questionIndex)
+  switch(type){
+    //add
+    case 1://part form
+          {
+            partModalStatus.value=true
+            isAdd.value=true
+            break
+          }
+    case 2://Block question form
+          {
+            blockModalStatus.value=true
+            selectedPart.value=partIndex
+            isAdd.value=true
+            break
+          }
+    case 3://Single question form
+          {
+            questionModalStatus.value=true
+            selectedPart.value=partIndex
+            isAdd.value=true
+            break
+          }
+          //update
+        case 4:
+          {
+            partModalStatus.value=true
+            isAdd.value=false
+            partForm.value={...data}
+            selectedPart.value=partIndex
+            break
+          }
+        case 5:{
+            blockModalStatus.value=true
+            isAdd.value=false
+            blockForm.value={...data}
+            selectedPart.value=partIndex
+            selectedBlock.value=blockIndex
+            break
+        }
+        case 6:{
+            questionModalStatus.value=true
+            isAdd.value=false
+            questionForm.value={...data}
+            selectedPart.value=partIndex
+            selectedQuestion.value=questionIndex
+            break
+        }
+        //câu hỏi con
+        case 7: {
+            questionBlockModalStatus.value=true
+            isAdd.value=true
+            selectedPart.value=partIndex
+            selectedBlock.value=blockIndex
+            break
+        }
+        case 8: {
+            questionBlockModalStatus.value=true
+            isAdd.value=false
+            questionBlockForm.value={...data}
+            selectedPart.value=partIndex
+            selectedBlock.value=blockIndex
+            selectedQuestion.value=questionIndex
+            break
+        }
+      }
+}
+const closeForm=(type)=>{
+  switch(type){
+    case 1://part form
+          {
+            partModalStatus.value=false
+            break
+          }
+    case 2://Block question form
+          {
+            blockModalStatus.value=false
+            break
+          }
+    case 3://Single question form
+          {
+            questionModalStatus.value=false
+            break
+          }
+    case 4: //question block form
+          {
+            questionBlockModalStatus.value=false
+            break
+          }
+    case 5://delete form
+          {
+          deleteType.value=null
+          selectedPart.value=null
+          selectedBlock.value=null
+          selectedQuestion.value=null
+          deleteModalStatus.value=false
+          }
+  }
+}
+const deleteForm=(type,partIndex,blockIndex,questionIndex)=>{
+          deleteModalStatus.value=true
+          deleteType.value=type
+          selectedPart.value=partIndex
+          selectedBlock.value=blockIndex
+          selectedQuestion.value=questionIndex
+}
+const doDelete=()=>{
+      switch(deleteType.value)
+      {
+        case 1:{
+            partList.value.splice(selectedPart.value,1)
+            deleteType.value=null
+            deleteModalStatus.value=false
+            break
+        }
+        case 2:{
+            partList.value[selectedPart.value].questionList.splice(selectedBlock.value,1)
+            deleteType.value=null
+            deleteModalStatus.value=false
+
+            break
+          }
+        case 3:{
+            partList.value[selectedPart.value].questionList[selectedBlock.value].question.splice(selectedQuestion.value,1)
+            deleteType.value=null
+            deleteModalStatus.value=false
+            break
+        }
+        case 4:{
+            partList.value[selectedPart.value].questionList.splice(selectedQuestion.value,1)
+            deleteType.value=null
+            deleteModalStatus.value=false
+            break
+        }
+      }
+}
+/////////////////////////
+const addPart=()=>{
+    partList.value.push({...partForm.value})
+    addPartList.value.push({...partForm.value})
+    partForm.value=getEmptyPart()
+    partModalStatus.value=false
+}
+const addBlock=()=>{
+  if(partList.value[selectedPart.value]._id){
+    partList.value[selectedPart.value].questionList.push({...blockForm.value})
+    addBlockList.value.push({
+      ...blockForm.value,
+      partId:partList.value[selectedPart.value]._id
+    })
+    blockForm.value=getEmptyBlock()
+    blockModalStatus.value=false
+  }
+  else{
+  addPartList.value[selectedPart.value].questionList.push({...blockForm.value})
+    addBlockList.value.push({
+      ...blockForm.value,
+      partId:partList.value[selectedPart.value]._id
+    })
+  }
+}
+const addQuestionToBlock=()=>{
+    partList.value[selectedPart.value].questionList[selectedBlock.value].question.push({...questionBlockForm.value})
+    questionBlockForm.value=getEmptyBlockQuestion()
+    questionBlockModalStatus.value=false
+}
+const addQuestion=()=>{
+    partList.value[selectedPart.value].questionList.push({...questionForm.value})
+    questionForm.value=getEmptyQuestion()
+    questionModalStatus.value=false
+}
+const updatePart=()=>{
+    if(partList.value[selectedPart.value].type!==partForm.value.type && partList.value[selectedPart.value].questionList.length>0 )
+    { alertService('error','Để chuyển kiểu phần thi, bạn cần xóa hết các câu hỏi trước')
+      return
+    }
+    partList.value[selectedPart.value]={...partForm.value}
+    partForm.value=getEmptyPart()
+    selectedPart.value=null
+    partModalStatus.value=false
+}
+const updateBlock=()=>{
+  partList.value[selectedPart.value].questionList[selectedBlock.value]={...blockForm.value}
+  blockForm.value=getEmptyBlock()
+  selectedPart.value=null
+  selectedBlock.value=null
+  blockModalStatus.value=false
+}
+const updateQuestionToBlock=()=>{
+  partList.value[selectedPart.value].questionList[selectedBlock.value].question[selectedQuestion.value]={...questionBlockForm.value}
+  questionBlockForm.value=getEmptyBlockQuestion()
+  selectedPart.value=null
+  selectedBlock.value=null
+  selectedQuestion.value=null
+  questionBlockModalStatus.value=false
+}
+const updateQuestion=()=>{
+  partList.value[selectedPart.value].questionList[selectedQuestion.value]={...questionForm.value}
+  questionForm.value=getEmptyQuestion()
+  selectedPart.value=null
+  selectedQuestion.value=null
+  questionModalStatus.value=false
+}
+//=====================================================
+//lựa chọn image, audio file
+const handlePartImageChange = (event) => {
+  const file = event.target.files?.[0]
+  if (partForm.value.imageUrlLocal) {
+    URL.revokeObjectURL(partForm.value.imageUrlLocal)
+  }
+  if (file) {
+    partForm.value.imageUrlLocal = URL.createObjectURL(file)
+    partForm.value.imageFile = file
+    console.log('Image selected:', file.name)
+  } else {
+    partForm.value.imageUrlLocal = ''
+    partForm.value.imageFile = null
+  }
+}
+const handlePartAudioChange = (event) => {
+  const file = event.target.files?.[0]
+  if (partForm.value.audioUrlLocal) {
+    URL.revokeObjectURL(partForm.value.audioUrlLocal)
+  }
+  if (file) {
+    partForm.value.audioUrlLocal = URL.createObjectURL(file)
+    partForm.value.audioFile = file
+    console.log('Audio selected:', file.name)
+  } else {
+    partForm.value.audioUrlLocal = ''
+    partForm.value.audioFile = null
+  }
+}
+const blockImageChange = (event) => {
+  const file = event.target.files?.[0]
+  if (blockForm.value.imageUrlLocal) {
+    URL.revokeObjectURL(blockForm.value.imageUrlLocal)
+  }
+  if (file) {
+    blockForm.value.imageUrlLocal = URL.createObjectURL(file)
+    blockForm.value.imageFile = file
+    console.log('Image selected:', file.name)
+  } else {
+    blockForm.value.imageUrlLocal = ''
+    blockForm.value.imageFile = null
+  }
+}
+const blockAudioChange = (event) => {
+  const file = event.target.files?.[0]
+  if (blockForm.value.audioUrlLocal) {
+    URL.revokeObjectURL(blockForm.value.audioUrlLocal)
+  }
+  if (file) {
+    blockForm.value.audioUrlLocal = URL.createObjectURL(file)
+    blockForm.value.audioFile = file
+    console.log('Audio selected:', file.name)
+  } else {
+    blockForm.value.audioUrlLocal = ''
+    blockForm.value.audioFile = null
+  }
+}
+const questionImageChange = (event) => {
+  const file = event.target.files?.[0]
+  if (questionForm.value.image.imageUrlLocal) {
+    URL.revokeObjectURL(questionForm.value.image.imageUrlLocal)
+  }
+  if (file) {
+    questionForm.value.image.imageUrlLocal = URL.createObjectURL(file)
+    questionForm.value.image.imageFile = file
+  } else {
+    questionForm.value.image.imageUrlLocal = ''
+    questionForm.value.image.imageFile = null
+  }
+}
+const questionAudioChange = (event) => {
+  const file = event.target.files?.[0]
+  if (questionForm.value.audio.audioUrlLocal) {
+    URL.revokeObjectURL(questionForm.value.audio.audioUrlLocal)
+  }
+  if (file) {
+    questionForm.value.audio.audioUrlLocal = URL.createObjectURL(file)
+    questionForm.value.audio.audioFile = file
+  } else {
+    questionForm.value.audio.audioUrlLocal = ''
+    questionForm.value.audio.audioFile = null
+  }
+}
+//==============================================
+//main
+const getBlockUrl=async(blockList)=>{
+  const res=await Promise.allSettled(
+    blockList.map(async(block,index)=>{
+        let imageUrl=''
+        let imageId=''
+        let audioUrl=''
+        let audioId=''
+        if(block.imageUrlLocal)
+        {
+          const data= await sendImageKit(block.imageUrlLocal,block.imageFile)
+          imageUrl=data.url
+          imageId=data.fileId
+        }
+        if(block.audioUrlLocal){
+          const data= await uploadAudio(block.audioFile)
+          audioUrl=data.secure_url
+          audioId=data.public_id
+        }
+        return {
+          order:index,
+          content:block.content,
+          imageUrl:imageUrl,
+          imageId:imageId,
+          audioUrl:audioUrl,
+          audioId:audioId,
+          question:block.question
+        }
+
+    })
+  )
+  return res.map((n)=>{
+    return n.value
+  })
+}
+const getQuestionUrl=async(questionList)=>{
+  const res=await Promise.allSettled(
+    questionList.map(async(question,index)=>{
+        let imageUrl=''
+        let imageId=''
+        let audioUrl=''
+        let audioId=''
+        if(question.image.imageUrlLocal)
+        {
+          const data= await sendImageKit(question.image.imageUrlLocal,question.image.imageFile)
+          imageUrl=data.url
+          imageId=data.fileId
+        }
+        if(question.audio.audioUrlLocal){
+          const data= await uploadAudio(question.audio.audioFile)
+          audioUrl=data.secure_url
+          audioId=data.public_id
+        }
+  return {
+        questionText:question.questionText,
+        order:index,
+        image:{
+          imageUrl:imageUrl,
+          imageId: imageId,
+        },
+        audio:{
+          audioUrl:audioUrl,
+          audioId: audioId,
+        },
+        options:question.options,
+        correctAnswer:question.correctAnswer,
+        explaination:question.explaination,
+        score:question.score
+  }
+
+    })
+  )
+  return res.map((n)=>{
+    return n.value
+  })
+}
+const getPartUrl=async()=>{
+    const res= await Promise.allSettled(
+      partList.value.map(async(part,index)=>{
+        let imageUrl=''
+        let imageId=''
+        let audioUrl=''
+        let audioId=''
+        let questionList=[]
+        if(part.imageUrlLocal)
+        {
+          const data= await sendImageKit(part.imageUrlLocal,part.imageFile)
+          imageUrl=data.url
+          imageId=data.fileId
+        }
+        if(part.audioUrlLocal){
+          const data= await uploadAudio(part.audioFile)
+          audioUrl=data.secure_url
+          audioId=data.public_id
+        }
+        if(part.type==='many')
+        {
+          questionList=await getBlockUrl(part.questionList)||[]
+        }
+        if(part.type==='one')
+        {
+          questionList=await getQuestionUrl(part.questionList)||[]
+        }
+        return{
+          title:part.title,
+          type:part.type,
+          order:index,
+          content:part.content,
+          imageUrl:imageUrl,
+          imageId:imageId,
+          audioUrl:audioUrl,
+          audioId:audioId,
+          questionList:questionList,
+          time:part.time
+        }
+      })
+    )
+    return res.map((n)=>{
+    return n.value
+  })
+}
+const addExam=async()=>{
+  //thử cách gửi toàn bộ ảnh,audio của part,block,question cùng 1 lượt
+  //chậm
+    const mainContent=await getPartUrl()
+    const payload = JSON.parse(JSON.stringify(mainContent));
+    const data=
+    {
+      title: examInfo.value.title,
+      level: examInfo.value.level,
+      mainContent:payload
+
+    }
+    console.log("data gửi lên BE",data)
+    const res=await axiosInstance.post('/exams',data)
+    if(res.data.success){
+      alertService('success','Thêm đề thi thành công')
+    }
+    else alertService('error','Thêm đề thi thất bại')
 }
 
-const totalQuestions = computed(() => {
-  const s = examForm.value.structure;
-  return (s.vocabulary?.count || 0) + (s.reading?.count || 0) + (s.listening?.count || 0);
-});
 
-const totalDuration = computed(() => {
-  const s = examForm.value.structure;
-  return (s.vocabulary?.duration || 0) + (s.reading?.duration || 0) + (s.listening?.duration || 0);
-});
-
-const canAddQuestion = computed(() => {
-  const q = question.value;
-  return (q.questionText || '').trim().length > 0 && (q.options || []).filter(Boolean).length >= 2;
-});
-
-function mapQuestionFromApi(q) {
-  const opts = q.options || [];
-  while (opts.length < 4) opts.push('');
-  return {
-    questionText: q.questionText || '',
-    urlLocal: '',
-    image: { imageUrl: q.image?.imageUrl || '', imageId: q.image?.imageId || '' },
-    audio: { audioUrl: q.audio?.audioUrl || '', audioId: q.audio?.audioId || '' },
-    videoUrl: q.videoUrl || '',
-    options: opts,
-    correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
-    explanation: q.explanation || '',
-    score: q.score != null ? q.score : 1,
-  };
-}
-
-async function loadExam() {
-  loading.value = true;
-  loadError.value = '';
+const loadExam=async()=>{
   try {
     const res = await axiosInstance.get(`/exams/${examId.value}`);
     if (!res.data?.success || !res.data?.data) {
-      loadError.value = 'Không tìm thấy đề thi.';
+      alertService("error",'Không tìm thấy đề thi.')
       return;
     }
-    const exam = res.data.data;
-    examLevel.value = exam.level || 'N5';
-    examForm.value = {
-      title: exam.title || '',
-      level: exam.level || 'N5',
-      structure: {
-        vocabulary: exam.structure?.vocabulary || { count: 0, duration: 0 },
-        reading: exam.structure?.reading || { count: 0, duration: 0 },
-        listening: exam.structure?.listening || { count: 0, duration: 0 },
-      },
-    };
-    const questions = exam.questionIds || [];
-    questionList.value = questions.map(mapQuestionFromApi);
-    fileList.value = questions.map(() => null);
-    questionIndex.value = questionList.value.length + 1;
+    examInfo.value = res.data.examInfo;
+    partList.value=res.data.data
   } catch (err) {
     console.error('loadExam error:', err);
-    loadError.value = err.response?.data?.message || 'Không thể tải đề thi.';
-  } finally {
-    loading.value = false;
-  }
-}
-
-function goToStep3() {
-  step2Error.value = '';
-  if (!(examForm.value.title || '').trim()) {
-    step2Error.value = 'Vui lòng nhập tiêu đề đề thi.';
-    return;
-  }
-  if (totalQuestions.value < 1) {
-    step2Error.value = 'Vui lòng nhập số câu hỏi và thời gian cho từng phần thi.';
-    return;
-  }
-  if (totalDuration.value < 1) {
-    step2Error.value = 'Vui lòng nhập thời gian cho từng phần thi.';
-    return;
-  }
-  examForm.value.level = examLevel.value;
-  stepStatus.value = 3;
-}
-
-function onFileChange(event) {
-  const selectedFile = event.target.files?.[0] ?? null;
-  currentFile.value = selectedFile;
-  if (question.value.urlLocal) URL.revokeObjectURL(question.value.urlLocal);
-  question.value.urlLocal = selectedFile ? URL.createObjectURL(selectedFile) : '';
-}
-
-function createQuestion() {
-  const q = question.value;
-  const options = [...(q.options || ['', '', '', ''])];
-  while (options.length < 4) options.push('');
-  const newItem = {
-    questionText: q.questionText || '',
-    urlLocal: q.urlLocal || '',
-    image: { ...q.image },
-    audio: { ...q.audio },
-    videoUrl: q.videoUrl || '',
-    options,
-    correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
-    explanation: q.explanation || '',
-    score: q.score != null ? q.score : 1,
-  };
-  const newFile = question.value.urlLocal ? currentFile.value : null;
-  if (editingIndex.value != null) {
-    questionList.value[editingIndex.value] = newItem;
-    fileList.value[editingIndex.value] = newFile;
-    editingIndex.value = null;
-  } else {
-    questionList.value.push(newItem);
-    fileList.value.push(newFile);
-  }
-  questionIndex.value = questionList.value.length + 1;
-  currentFile.value = null;
-  if (question.value.urlLocal) URL.revokeObjectURL(question.value.urlLocal);
-  question.value = getEmptyQuestion();
-  question.value.options = ['', '', '', ''];
-}
-
-function editQuestion(index) {
-  const q = questionList.value[index];
-  question.value = {
-    questionText: q.questionText || '',
-    urlLocal: '',
-    image: { ...q.image },
-    audio: { ...q.audio },
-    videoUrl: q.videoUrl || '',
-    options: [...(q.options || ['', '', '', ''])],
-    correctAnswer: q.correctAnswer != null ? q.correctAnswer : 0,
-    explanation: q.explanation || '',
-    score: q.score != null ? q.score : 1,
-  };
-  editingIndex.value = index;
-  questionIndex.value = index + 1;
-}
-
-function deleteQuestion(index) {
-  questionList.value.splice(index, 1);
-  fileList.value.splice(index, 1);
-  if (editingIndex.value === index) {
-    question.value = getEmptyQuestion();
-    question.value.options = ['', '', '', ''];
-    editingIndex.value = null;
-  } else if (editingIndex.value != null && editingIndex.value > index) {
-    editingIndex.value--;
-  }
-  questionIndex.value = questionList.value.length + 1;
-}
-
-async function submitExam() {
-  const total = totalQuestions.value;
-  if (questionList.value.length !== total) {
-    alert(`Vui lòng thêm đủ ${total} câu hỏi. Hiện có ${questionList.value.length} câu.`);
-    return;
-  }
-  isSubmitting.value = true;
-  try {
-    const list = questionList.value;
-    const files = fileList.value;
-    const getImageUrl = await Promise.allSettled(
-      list.map(async (n, index) => {
-        if (!n.urlLocal) return { imageUrl: n.image?.imageUrl || '', imageId: n.image?.imageId || '' };
-        const file = files[index];
-        if (!file) return { imageUrl: n.image?.imageUrl || '', imageId: n.image?.imageId || '' };
-        const uploaded = await sendImageKit(n.urlLocal, file);
-        return { imageUrl: uploaded?.url || '', imageId: uploaded?.fileId || '' };
-      })
-    );
-    for (let i = 0; i < list.length; i++) {
-      const result = getImageUrl[i];
-      const value = result.status === 'fulfilled' ? result.value : {};
-      list[i].image = { imageUrl: value.imageUrl || '', imageId: value.imageId || '' };
-    }
-    const payload = {
-      title: examForm.value.title.trim(),
-      level: examLevel.value,
-      structure: examForm.value.structure,
-      questions: list.map((q) => ({
-        questionText: (q.questionText || '').trim(),
-        image: q.image || { imageUrl: '', imageId: '' },
-        audio: q.audio || { audioUrl: '', audioId: '' },
-        videoUrl: q.videoUrl || '',
-        options: (q.options || []).filter(Boolean).length ? q.options : ['', '', '', ''],
-        correctAnswer: typeof q.correctAnswer === 'number' ? q.correctAnswer : 0,
-        explanation: (q.explanation || '').trim(),
-        score: q.score != null ? q.score : 1,
-      })),
-    };
-    const res = await axiosInstance.put(`/exams/${examId.value}`, payload);
-    if (res.data?.success) {
-      alert('Cập nhật đề thi thành công!');
-      router.push({ name: 'ExamManager' });
-    } else {
-      alert(res.data?.message || 'Cập nhật thất bại.');
-    }
-  } catch (err) {
-    console.error('submitExam error:', err);
-    alert(err.response?.data?.message || 'Có lỗi khi cập nhật đề thi.');
-  } finally {
-    isSubmitting.value = false;
   }
 }
 
 onMounted(() => {
   if (examId.value) loadExam();
-  else loadError.value = 'Thiếu ID đề thi.';
 });
+
 </script>
 
 <style scoped>
-.edit-exam-page {
-  max-width: 1100px;
-  margin: 0 auto;
+.form{
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
 }
-.step-card {
-  margin-bottom: 1.5rem;
+.block{
+  display:flex;
+  flex-direction:column;
 }
-.add-exam-content {
-  margin-top: 1rem;
+.block-list{
+  display:flex;
+  flex-direction:row;
+
+}
+.block-question{
+  display:flex;
+  flex-direction:column;
 }
 </style>
+
+
