@@ -1,11 +1,17 @@
 <template>
   <div class="exam-manager-page">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h3 mb-0">Quản lý đề thi</h1>
-      <router-link to="/admin/exams/add" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>
-        Thêm Exam
-      </router-link>
+      <p><input type="text" placeholder="Tìm kiếm đề thi..." v-model="searchTerm" /> <i class="bi bi-search" @click="doSearch"></i>
+      </p>
+      <p> Mức độ:
+        <select v-model="filterLevel" @change="doSearch" class="form-select form-select-sm w-auto">
+        <option value="">Tất cả mức độ</option>
+        <option value="Dễ">Dễ</option>
+        <option value="Trung bình">Trung bình</option>
+        <option value="Khó">Khó</option>
+      </select>
+      </p>
+
     </div>
 
     <div v-if="loading" class="text-center py-5">
@@ -49,20 +55,12 @@
             <td>{{ formatDate(exam.createdAt) }}</td>
             <td class="text-end">
               <router-link
-                :to="{ name: 'EditExam', params: { id: exam._id } }"
+                :to="{ name: 'PracticePage', params: { id: exam._id } }"
                 class="btn btn-sm btn-outline-warning me-1"
                 title="Sửa đề thi"
               >
                 Xem chi tiết
               </router-link>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-danger"
-                title="Xóa đề thi"
-                @click="confirmDelete(exam)"
-              >
-                <i class="bi bi-trash"></i>
-              </button>
             </td>
           </tr>
         </tbody>
@@ -161,9 +159,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-//import { useRouter } from 'vue-router';
 import axiosInstance from '@/services/axiosService';
-
 //const router = useRouter();
 const examList = ref([]);
 const loading = ref(true);
@@ -172,7 +168,22 @@ const examToDelete = ref(null);
 const examToView = ref(null);
 const examDetail = ref(null);
 const viewLoading = ref(false);
-
+const searchTerm = ref('');
+const filterLevel = ref('');
+async function doSearch() {
+  const term = searchTerm.value.trim().toLowerCase();
+  const level = filterLevel.value;
+  const res= await axiosInstance.get('/exams', {
+    params: {
+      search: term,
+      level: level
+    }
+  });
+  if (res.data?.success && Array.isArray(res.data.data)) {
+    examList.value = res.data.data;
+  } else {    examList.value = [];
+  }
+}
 function totalQuestions(exam) {
   const s = exam.structure || {};
   return (s.vocabulary?.count || 0) + (s.reading?.count || 0) + (s.listening?.count || 0);
@@ -205,26 +216,6 @@ async function fetchExams() {
     examList.value = [];
   } finally {
     loading.value = false;
-  }
-}
-
-function confirmDelete(exam) {
-  examToDelete.value = exam;
-}
-
-async function doDelete() {
-  if (!examToDelete.value) return;
-  try {
-    const res = await axiosInstance.delete(`/exams/${examToDelete.value._id}`);
-    if (res.data?.success) {
-      examToDelete.value = null;
-      await fetchExams();
-    } else {
-      alert(res.data?.message || 'Xóa thất bại.');
-    }
-  } catch (err) {
-    console.error('delete exam error:', err);
-    alert(err.response?.data?.message || 'Có lỗi khi xóa đề thi.');
   }
 }
 

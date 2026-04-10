@@ -6,7 +6,8 @@ export default [
     children: [
       {
         path: '',
-        redirect: { name: 'ExamManager' },
+        name: 'AdminDashboard',
+        component: () => import('@/pages/adminPages/adminDashboard.vue'),
       },
       {
         path: 'exams',
@@ -23,6 +24,41 @@ export default [
         name: 'EditExam',
         component: () => import('@/pages/adminPages/examManage/editExam.vue'),
       },
+      {
+        path:'courses',
+        name:'CourseManager',
+        component: () => import('@/pages/adminPages/CourseManage/coursesManagePage.vue'),
+      },
+      {
+        path:'courses/:id'
+        ,name:'LessonManager',
+        component: () => import('@/pages/adminPages/CourseManage/courseDetailPage.vue'),
+      },
+      {
+        path:'courses/:id/add-lesson'
+        ,name:'AddLesson',
+        component: () => import('@/pages/adminPages/CourseManage/addLessonPage.vue'),
+      },
+      {
+        path:'courses/:id/edit-lesson/:lessonId'
+        ,name:'EditLesson',
+        component: () => import('@/pages/adminPages/CourseManage/editLessonPage.vue'),
+      },
+      {
+        path:'vocabulary'
+        ,name:'Vocabulary',
+        component: () => import('@/pages/adminPages/vocabularyManager.vue'),
+      },
+      {
+        path:'flashcards'
+        ,name:'Flashcards',
+        component: () => import('@/pages/adminPages/flashCard/flashCardListManage.vue'),
+      },
+      {
+        path:'flashcards/:id'
+        ,name:'FlashCardManage',
+        component: () => import('@/pages/adminPages/flashCard/flashCardManage.vue'),
+      }
     ],
   },
 ]

@@ -1,62 +1,124 @@
 <template>
-  <button @click="openAddModal">Thêm khóa học</button>
-  <div class="course-lists">
-    <div>Danh sách khóa học</div>
-    <div v-for="list in courseList" :key="list._id">
-      <div >
-        <img :src="list.imgUrl"/>
-        <p  @click="GotoLessonManagePage(list._id)">{{list.name }}</p>
-        <i class="bi bi-arrow-repeat" @click="openUpdateModal(list)"></i>
-        <i class="bi bi-trash3-fill" @click="openFormDelete(list._id)"></i>
+  <!-- Danh sách khóa học -->
+  <div class="card p-3">
+    <div class="d-flex justify-content-between ">
+          <h5 class="mb-3">Danh sách khóa học</h5>
+    <!-- Button thêm khóa học -->
+    <button class="btn btn-primary mb-3" @click="openAddModal">
+      Thêm khóa học
+    </button>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4" v-for="list in courseList" :key="list._id">
+
+        <div class="card h-100 shadow-sm" @click="GotoLessonManagePage(list._id)">
+
+          <img class="card-img-top"
+               :src="list.imgUrl"
+               style="height:160px; object-fit:cover;" />
+
+          <div class="card-body d-flex flex-column">
+
+            <h6 class="card-title"
+                >
+              {{ list.name }}
+            </h6>
+
+            <div class="mt-auto d-flex justify-content-end">
+              <i class="bi bi-trash3-fill text-danger"
+                 style="cursor:pointer"
+                 @click="openFormDelete(list._id)">
+              </i>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
-  <div class="delete-course" v-if="deleteModalStatus">
-    <p>Bạn có chắc chắn muốn khóa khóa học này hay không?</p>
-    <button @click="deleteCourse">Xác nhận</button>
-    <button @click="rejectDelete">Hủy bỏ</button>
+
+
+  <!-- Modal xóa khóa học -->
+  <div v-if="deleteModalStatus"
+       class="modal fade show d-block bg-dark bg-opacity-50">
+
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Xóa khóa học</h5>
+          <button class="btn-close" @click="rejectDelete"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn xóa khóa học này không?</p>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="rejectDelete">Hủy</button>
+          <button class="btn btn-danger" @click="deleteCourse">Xác nhận</button>
+        </div>
+
+      </div>
+    </div>
   </div>
-  <div class="add-course-modal" v-if="addModalStatus">
-      <div class="header">
-        <i @click="closeAddModal"></i>
+
+
+  <!-- Modal thêm khóa học -->
+  <div v-if="addModalStatus"
+       class="modal fade show d-block bg-dark bg-opacity-50">
+
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Thêm khóa học mới</h5>
+          <button class="btn-close" @click="closeAddModal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <form @submit.prevent="addNewCourse">
+
+            <div class="mb-3">
+              <label class="form-label">Tên khóa học</label>
+              <input type="text" class="form-control" v-model="form.name"/>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Ảnh minh họa</label>
+              <input type="file" class="form-control" accept="image/*" @change="onFileChange"/>
+            </div>
+
+            <div v-if="imageUrlLocal" class="mb-3">
+              <img :src="imageUrlLocal"
+                   class="img-fluid rounded shadow-sm"
+                   style="max-height:200px; object-fit:cover;" />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Mô tả</label>
+              <input type="text" class="form-control" v-model="form.description"/>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              Thêm khóa học
+            </button>
+
+          </form>
+
+          <p class="text-danger mt-2">{{ errMessage }}</p>
+
+        </div>
       </div>
-      <div class="body">
-        <form @submit.prevent="addNewCourse">
-          <label>Tên khóa học</label>
-          <input type="text" v-model="form.name"/>
-          <label>Ảnh minh họa</label>
-          <input type="file" accept="image/*" @change="onFileChange" />
-          <div v-if="imageUrlLocal" style="margin-top: 16px">
-            <img :src="imageUrlLocal" alt="preview" style="max-width: 300px" />
-          </div>
-          <label>Mô tả</label>
-          <input type="text" v-model="form.description"/>
-          <button type="submit">Thêm mới</button>
-        </form>
-        <p>{{ errMessage }}</p>
-      </div>
-  </div>
-    <div class="update-course-modal" v-if="updateModalStatus">
-      <div class="header">
-        <i @click="closeUpdateModal"></i>
-      </div>
-      <div class="body">
-        <form @submit.prevent="updateCourse">
-          <label>Tên khóa học</label>
-          <input type="text" v-model="form.name"/>
-          <label>Ảnh minh họa</label>
-          <input type="file" accept="image/*" @change="onFileChange" />
-          <img :src="imageUrlLocal||form.imgUrl" alt="preview" style="max-width: 300px" />
-          <label>Mô tả</label>
-          <input type="text" v-model="form.description"/>
-          <button type="submit">Cập nhật</button>
-        </form>
-        <p>{{ errMessage }}</p>
-      </div>
+    </div>
   </div>
 </template>
 <script setup>
 import { ref,onMounted,onBeforeUnmount} from 'vue'
+import router from '@/router/index.js'
 import axiosInstance from '@/services/axiosService'
 import 'vue-toastification/dist/index.css'
 import sendImageKit from '@/services/imageService'
@@ -64,14 +126,12 @@ const form=ref({
   _id:null,
   name:null,
   imgUrl:null,
-  description:null,
-  oldImgUrlLoca:null
+  imgId:"",
+  description:"",
 })
 const imageUrlLocal=ref(null)
-let preform
 const file=ref()
 const addModalStatus=ref(false)
-const updateModalStatus=ref(false)
 const deleteModalStatus=ref(false)
 const courseId=ref()
 const errMessage=ref('')
@@ -86,28 +146,22 @@ const openAddModal=()=>{
 const closeAddModal=()=>{
   addModalStatus.value=false
 }
-const openUpdateModal=(list)=>{
-  updateModalStatus.value=true
-  form.value=list
-  preform={...form.value}
-}
-const closeUpdateModal=()=>{
-  updateModalStatus.value=false
-}
+
 //delete
 const deleteCourse=async()=>{
-  const data={
-    oldImgUrl:form.value.imgUrl
-  }
-  const res= await axiosInstance.delete(`/courses/${courseId.value}`,data)
-  if(res){
+  const res= await axiosInstance.delete(`/courses/${courseId.value}`)
+  if(res.data.success){
     alert('Xóa thành công')
     courseId.value=''
+    getCourseList()
   }
 }
 const rejectDelete=()=>{
   deleteModalStatus.value=false
   courseId.value=''
+}
+const GotoLessonManagePage=(id)=>{
+  router.push(`/admin/courses/${id}`)
 }
 //get
 const getCourseList=async()=>{
@@ -146,7 +200,7 @@ const addNewCourse=async()=>{
         name:form.value.name,
         description:form.value.description,
         imgUrl:form.value.imgUrl,
-        oldImgUrlLocal:imageUrlLocal.value
+        imgId:imagekit.fileId
       }
       console.log("data",data)
       //tạo mới khóa học
@@ -166,33 +220,6 @@ const addNewCourse=async()=>{
     console.log(err)
   }
 }
-const updateCourse=async()=>{
-  try{
-      const data={}
-      if(preform.name!==form.value.name)
-            data.name=form.value.name
-      if(preform.description!==form.value.description)
-            data.description=form.value.description
-      if(preform.oldImgUrlLocal!==imageUrlLocal.value&&imageUrlLocal.value!==null)
-            data.oldImgUrl=form.value.imgUrl
-            const imagekit=await sendImageKit(imageUrlLocal.value,file.value)
-            data.imgUrl=imagekit.url
-            data.oldImgUrlLocal=imageUrlLocal.value
-            console.log("có gọi")
-      if(Object.keys(data).length !== 0)
-      {
-        const response=await axiosInstance.put(`/courses/${form.value._id}`,data)
-      if(response.data.success){
-        alert('Cập nhật thành công')
-        URL.revokeObjectURL(imageUrlLocal.value)
-      }
-      else{
-        alert("Thất bại")
-      }}
-  }catch(err){
-    console.log(err)
-  }
-}
 onMounted(
 
   getCourseList
@@ -203,3 +230,4 @@ onBeforeUnmount(() => {
   }
 })
 </script>
+

@@ -24,7 +24,7 @@
   </div>
 </template>
 <script setup>
-  import { ref } from 'vue';
+  import { ref ,onMounted} from 'vue';
   import axiosInstance from '@/services/axiosService';
   const createUserModal = ref(false);
   const emailregex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,6 +41,15 @@
   const closeCreateUsserModal = () => {
     createUserModal.value = false;
   };
+  const userList=ref([])
+  const search=ref({
+    role:'',
+    level:'',
+    keyword:'',
+    startDate:'',
+    endDate:'',
+    sortBy:''
+  })
   const createUser = async() => {
     // Logic to create user
     if (!form.value.email || !form.value.password) {
@@ -67,5 +76,21 @@
     errorMessage.value = 'Đã xảy ra lỗi khi tạo người dùng.';
   });
 }
+const getUserList=async(page)=>{
 
+ const res=await axiosInstance.get('user',{
+  params:{
+    page:page,
+    role:search.value.role,
+    level:search.value.level,
+    keyword:search.value.keyword,
+    startDate:search.value.startDate,
+    endDate:search.value.endDate,
+    sortBy:search.value.sortBy
+  }
+ })
+ if(res.data.success){
+  userList.value=res.data.data
+ }
+}
 </script>
