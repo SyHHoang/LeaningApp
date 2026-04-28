@@ -42,7 +42,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axiosInstance from '@/services/axiosService'
+import axiosInstance from '@/services/axiosService.js'
 //import GoogleLoginButton from '@/components/auth/googleLoginButton.vue'
 
 const router = useRouter()
@@ -56,8 +56,7 @@ const form = ref({
 const login = async () => {
   try {
     const res = await axiosInstance.post('users/login', form.value)
-    console.log(res)
-    localStorage.setItem('access_token', res.data.token)
+    console.log("res là", res)
     if(res.data.success)
       router.push(`/${res.data.role}`)
   } catch (err) {

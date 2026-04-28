@@ -56,8 +56,9 @@ const fetchCourses = async () => {
   }
 }
 
-onMounted(() => {
-  fetchCourses()
+onMounted(async() => {
+  console.log('CoursesPage mounted, bắt đầu gọi API')
+  await fetchCourses()
 })
 </script>
 
