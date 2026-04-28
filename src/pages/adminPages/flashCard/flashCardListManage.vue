@@ -1,37 +1,48 @@
 <template>
   <div class="container">
-    <h1>Flash Cards</h1>
+    <header>
+      <h1>Public Flash Cards</h1>
+    </header>
+    <section class="create-box">
+      <h2>Tạo danh sách Flashcard</h2>
+      <form @submit.prevent="createDeck">
+        <input v-model="form.name" placeholder="Deck name" />
+        <input v-model="form.description" placeholder="Description" />
+        <button type="submit">Create</button>
+      </form>
+    </section>
+    <section class="list">
+      <h2>Danh sách Deck</h2>
+      <div class="cards">
+        <article
+          v-for="deck in decks"
+          :key="deck._id"
+          class="card"
+          @click="GoToFlashCardManage(deck._id)"
+        >
+          <h3>{{ deck.name }}</h3>
+          <p>{{ deck.description }}</p>
+          <small>Cards: {{ deck.card_count }}</small>
 
-    <!-- Create -->
-    <div class="create-box">
-      <input v-model="form.name" placeholder="Deck name" />
-      <input v-model="form.description" placeholder="Description" />
-      <button @click="createDeck">Create</button>
-    </div>
-
-    <div class="list">
-      <div v-for="deck in decks" :key="deck._id" class="card" @click="GoToFlashCardManage(deck._id)">
-        <h3>{{ deck.name }}</h3>
-        <p>{{ deck.description }}</p>
-        <small>Cards: {{ deck.card_count }}</small>
-
-        <div class="actions">
-          <button @click="startEdit(deck)">Edit</button>
-          <button @click="deleteDeck(deck._id)">Delete</button>
-        </div>
+          <div class="actions">
+            <button @click.stop="startEdit(deck)">Edit</button>
+            <button @click.stop="deleteDeck(deck._id)">Delete</button>
+          </div>
+        </article>
       </div>
-    </div>
+    </section>
 
-    <div v-if="editing" >
-      <div>
-        <h3>Edit Deck</h3>
+    <div v-if="editing" class="edit-box">
+      <h2>Edit Deck</h2>
+      <form @submit.prevent="updateDeck">
         <input v-model="editForm.name" />
         <input v-model="editForm.description" />
+
         <div class="actions">
-          <button @click="updateDeck">Save</button>
-          <button @click="editing = null">Cancel</button>
+          <button type="submit">Save</button>
+          <button type="button" @click="editing = null">Cancel</button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </template>
@@ -97,53 +108,5 @@ onMounted(fetchDecks)
 </script>
 
 <style scoped>
-.container {
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-}
 
-.create-box {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.list {
-  display: grid;
-  gap: 15px;
-}
-
-.card {
-  border: 1px solid #ddd;
-  padding: 15px;
-  border-radius: 10px;
-}
-
-.actions {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-button {
-  cursor: pointer;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  margin: 100px auto;
-  width: 300px;
-  border-radius: 10px;
-}
 </style>

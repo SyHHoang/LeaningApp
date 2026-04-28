@@ -34,3 +34,43 @@ coverage
 
 # Vitest
 __screenshots__/
+# Dependencies (quan trọng nhất)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# IDE và Editor (VS Code)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Config cá nhân (không nên share)
+.prettier.json
+.prettierrc
+.eslintrc.local
+
+# Environment variables (bảo mật - rất quan trọng)
+.env
+.env.local
+.env.*.local
+
+# Build và log
+dist/
+build/
+logs/
+*.log
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Các file tạm thời
+*.tmp
+*.temp
+.cache/

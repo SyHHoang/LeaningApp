@@ -1,43 +1,32 @@
-// src/utils/token.js
+
+import Cookies from 'js-cookie'
 export const TokenService = {
-  // Lưu token
-  setToken(token) {
-    console.log("1",token)
-    localStorage.setItem('access_token', token)//lưu token dạng key value
-  },
-
-  // Lấy token
-  getToken() {
-    return localStorage.getItem('access_token')
-  },
-  // Xóa token
-  removeToken() {
-    localStorage.removeItem('access_token')
-  },
-
-  // Kiểm tra có token không
-  hasToken() {
-    return !!this.getToken()
-  },
-
-  // Giải mã payload (không verify)
-  decodeToken(token) {
-    try {
-      const payload = token.split('.')[1]
-      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
-      return JSON.parse(decoded)
-    } catch (error) {
-      console.error('Error decoding token:', error)
-      return null
-    }
-  },
-
-  // Kiểm tra token hết hạn chưa
-  isTokenExpired(token) {
-    const decoded = this.decodeToken(token)
-    if (!decoded || !decoded.exp) return true
-
-    const currentTime = Math.floor(Date.now() / 1000)
-    return decoded.exp < currentTime
-  }
+      setAccessToken(token) {
+        Cookies.set('accessToken', token, {
+          expires: 1/24,
+          secure: false,// Chỉ nên đặt secure: true khi sử dụng HTTPS
+          sameSite: 'Strict'
+        })
+        console.log('Access token đã được lưu vào cookie')
+      },
+      setRefreshToken(token) {
+        Cookies.set('refreshToken', token, {
+          expires: 7,
+          secure: false,// Chỉ nên đặt secure: true khi sử dụng HTTPS
+          sameSite: 'Strict'
+        })
+        console.log('Refresh token đã được lưu vào cookie')
+      },
+      getAccessToken() {
+        console.log('Lấy access token từ cookie')
+        return Cookies.get('accessToken')
+      },
+      getRefreshToken() {
+        console.log('Lấy refresh token từ cookie')
+        return Cookies.get('refreshToken')
+      },
+      removeToken() {
+        Cookies.remove('accessToken')
+        Cookies.remove('refreshToken')
+      }
 }

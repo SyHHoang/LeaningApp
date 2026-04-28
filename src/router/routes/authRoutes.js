@@ -12,7 +12,7 @@ export default [
         path:'register',
         name:'register',
         component:()=>import('@/layouts/registerLayout.vue')
-      }
+      },
     ]
   }
 ]

@@ -4,14 +4,14 @@
       <nav class="navbar">
 
         <div class="logo">
-          <a href="/" class="logo-box">
+          <a href="/user" class="logo-box">
             <img src="/logo.jpg" alt="EngliGo" />
             <span class="site-name">EngliGo</span>
           </a>
         </div>
 
         <ul class="menu">
-          <li><router-link to="/">Trang chủ</router-link></li>
+          <li><router-link to="/user">Trang chủ</router-link></li>
           <li><router-link to="/user/courseList">Khóa học</router-link></li>
           <li><router-link to="/user/examList">Đề thi</router-link></li>
           <li><router-link to="/user/examHistory">Lịch sử thi</router-link></li>

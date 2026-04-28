@@ -204,6 +204,7 @@ async function fetchExams() {
   loading.value = true;
   error.value = '';
   try {
+    console.log('Đang gọi API /exams để lấy danh sách đề thi');
     const res = await axiosInstance.get('/exams');
     if (res.data?.success && Array.isArray(res.data.data)) {
       examList.value = res.data.data;

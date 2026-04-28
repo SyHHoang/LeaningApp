@@ -1,9 +1,9 @@
 <template>
 <userHeader></userHeader>
-<homePage></homePage>
+<div class="content">
+  <router-view></router-view>
+</div>
 </template>
 <script setup>
 import userHeader from '@/components/header/userHeader.vue';
-import homePage from '@/pages/userPages/homePage.vue';
-
 </script>

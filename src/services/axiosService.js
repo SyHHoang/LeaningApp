@@ -1,48 +1,63 @@
-    import axios from 'axios';
-    import { TokenService } from '@/services/tokenService.js';
-    const axiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    }
-    });
+import axios from 'axios';
+
+const axiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  timeout: 10000,
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
+});
+
 // Request Interceptor
-//lấy token và gửi vào header
 axiosInstance.interceptors.request.use(
   (config) => {
-    if (config.data instanceof FormData) {//nếu dữ liệu gửi đi dạng formdata thì xóa header
-      delete config.headers['Content-Type']
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
     }
-    const token = TokenService.getToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    console.log('Bắt đầu gửi Api');
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response Interceptor
-//bắt lỗi API dựa vào response trả về từ backend
 axiosInstance.interceptors.response.use(
-    (response) => {
-    const {token} = response.data || {};
-    console.log('token là',token)
-    if (token &&response.config.url.includes('/auth/login')) {
-      TokenService.setToken(token)
-    }
-    return response;
-  },
+  (response) => {console.log('Nhận được phản hồi từ Api'); return response; },
   async (error) => {
-    if (error.response?.status === 401) {
-      // Xử lý refresh token nếu cần
-      console.error('Unauthorized');
+    const originalRequest = error.config;
+
+    if (
+      error.response?.status === 401 &&
+      error.response?.data?.code === 'TOKEN_EXPIRED' &&
+      !originalRequest._retry//(chạy nếu !originalRequest._retry có giá trị là true tức là originalRequest._retry có giá trị là falsy )
+    ) {
+      originalRequest._retry = true;//tạo thuộc tính _retry  trong configđể tránh vòng lặp vô hạn nếu refresh token cũng hết hạn hoặc có lỗi khác
+
+      try {
+        // ✅ withCredentials tự gửi refreshToken cookie lên backend
+        //không dùng axiosInstance vì có interceptor
+        //nếu gọi api refresh mà cái đó bị lỗi thì nó sẽ lặp vô hạn
+        //đó là nếu giả sử  BE trả về các lỗi sau cho mọi route error.response?.status === 401 &&error.response?.data?.code === 'TOKEN_EXPIRED' && !originalRequest._retry
+        await axios.post(
+          `${axiosInstance.defaults.baseURL}/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
+
+        // ✅ Retry request gốc, browser tự gắn accessToken cookie mới
+        //gọi lại requeest cũ (gửi accessToken) với config mới
+        //không dùng.get,.post nữa là vì trong config mới này đã có rồi
+        //dùng axiosInsstance thay vì axios vì có intercepter
+        return axiosInstance(originalRequest);//gửi config mới có thêm thuộc tính retry để tránh lặp
+
+      } catch (err) {
+        console.error('Refresh token hết hạn → logout');
+        window.location.href = '/login';
+        return Promise.reject(err);
+      }
     }
+
     return Promise.reject(error);
   }
 );
 
-export default axiosInstance
+export default axiosInstance;
