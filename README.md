@@ -1,44 +1,33 @@
-# LeaningApp
+# Learning App - Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+Frontend for the English learning platform. This app provides UI for vocabulary learning, grammar lessons, and practice tests.
 
-## Recommended IDE Setup
+## Tech Stack
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+* Vue.js
+* Vite
 
-## Recommended Browser Setup
+## Installation
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+git clone https://github.com/SyHHoang/LeaningApp.git
+cd LeaningApp
 npm install
-```
 
-### Compile and Hot-Reload for Development
+## Environment Variables
 
-```sh
+Create a `.env` file in the root folder:
+
+VITE_API_URL=your_vite_api_url<br>
+VITE_GOOGLE_CLIENT_ID=your_google_client_id<br>
+VITE_IMGKIT_PUBLIC_KEY=your_imgkit_public_key<br>
+VITE_IMGKIT_URL=your_imgkit_url_endpoint<br>
+VITE_IMG_ERROR_URL=your_fallback_image_url<br>
+VITE_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+
+## Run
+
 npm run dev
-```
 
-### Compile and Minify for Production
+## Notes
 
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+This frontend communicates with the backend via REST API. Make sure the backend is running and the API URL is set correctly in the environment variables.
