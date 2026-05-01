@@ -12,7 +12,9 @@
             type="email"
             placeholder="Nhập email của bạn"
             v-model="form.email"
+            :disabled="loading"
           />
+          <p class="error-text">{{ error.email }}</p>
         </div>
 
         <div class="form-group">
@@ -21,11 +23,14 @@
             type="password"
             placeholder="Nhập mật khẩu"
             v-model="form.password"
+            :disabled="loading"
           />
+          <p class="error-text">{{ error.password }}</p>
         </div>
 
-        <button type="submit" class="btn-login">
-          Đăng nhập
+        <button type="submit" class="btn-login" :disabled="loading">
+          <span v-if="loading" class="spinner"></span>
+          <span>{{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}</span>
         </button>
 
       </form>
@@ -48,20 +53,67 @@ import axiosInstance from '@/services/axiosService.js'
 const router = useRouter()
 
 const form = ref({
-  email: '',
-  password: ''
+  email:'',
+  password:''
 })
 
-// login thường
+const error = ref({
+  email:'',
+  password:''
+})
+
+const loading = ref(false)
+
 const login = async () => {
   try {
+    if (handleError(form.value.email, form.value.password)) return
+
+    loading.value = true
+
     const res = await axiosInstance.post('users/login', form.value)
     console.log("res là", res)
-    if(res.data.success)
+
+    if (res.data.success)
       router.push(`/${res.data.role}`)
+
   } catch (err) {
     console.error('Login thất bại', err)
+  } finally {
+    loading.value = false
   }
+}
+
+const handleError = (email, password) => {
+  error.value.email = ''
+  error.value.password = ''
+
+  let isError = false
+
+  email = email.trim()
+
+  if (!email) {
+    error.value.email = 'Email không được để trống'
+    isError = true
+  } else if (email.length > 256) {
+    error.value.email = 'Độ dài Email vượt quá 256 ký tự'
+    isError = true
+  } else {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      error.value.email = "Sai định dạng Email"
+      isError = true
+    }
+  }
+
+  if (!password) {
+    error.value.password = "Mật khẩu không được để trống"
+    isError = true
+  } else if (password.length > 100) {
+    error.value.password = "Độ dài mật khẩu vượt quá 100 ký tự"
+    isError = true
+  }
+
+  return isError
 }
 
 // login google
@@ -74,7 +126,12 @@ const login = async () => {
 //   console.error('Google login error:', err)
 // }
 </script>
+
 <style scoped>
+.error-text{
+  color: red;
+}
+
 .login-layout {
   min-height: 100vh;
   background: #f5f7fb;
@@ -137,10 +194,35 @@ const login = async () => {
   font-weight: 500;
   cursor: pointer;
   transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-login:hover {
   background: #4338CA;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 6px;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-footer {

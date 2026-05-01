@@ -6,6 +6,11 @@ export default[
   component: () => import('@/layouts/userLayout.vue'),
   children: [
     {
+      path:'',
+      name:'userDashboard',
+      component: ()=> import ('@/pages/userPages/homePage.vue')
+    },
+    {
       path:'examList',
       name:'ExamListPage',
       component: () => import('@/pages/userPages/exam/getExamList.vue'),
