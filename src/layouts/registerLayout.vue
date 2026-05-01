@@ -12,7 +12,12 @@
             type="text"
             placeholder="Nhập tên của bạn"
             v-model="form.username"
+            :class="{ invalid: errors.username }"
+            :disabled="loading"
           />
+          <p v-if="errors.username" class="error-message">
+            {{ errors.username }}
+          </p>
         </div>
 
         <div class="form-group">
@@ -21,7 +26,12 @@
             type="email"
             placeholder="Nhập email"
             v-model="form.email"
+            :class="{ invalid: errors.email }"
+            :disabled="loading"
           />
+          <p v-if="errors.email" class="error-message">
+            {{ errors.email }}
+          </p>
         </div>
 
         <div class="form-group">
@@ -30,16 +40,18 @@
             type="password"
             placeholder="Nhập mật khẩu"
             v-model="form.password"
+            :class="{ invalid: errors.password }"
+            :disabled="loading"
           />
+          <p v-if="errors.password" class="error-message">
+            {{ errors.password }}
+          </p>
         </div>
 
-        <button type="submit" class="btn-register">
-          Đăng ký
+        <button type="submit" class="btn-register" :disabled="loading">
+          <span v-if="loading" class="spinner"></span>
+          <span>{{ loading ? 'Đang đăng ký...' : 'Đăng ký' }}</span>
         </button>
-
-        <p v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
-        </p>
 
       </form>
 
@@ -51,50 +63,93 @@
     </div>
   </div>
 </template>
+
 <script setup>
-  import { ref } from 'vue';
-  import axiosInstance from '@/services/axiosService';
-  const form = ref({
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import axiosInstance from '@/services/axiosService'
+import { alertService } from '@/services/alertService'
+const router = useRouter()
+
+const form = ref({
+  username: '',
+  email: '',
+  password: ''
+})
+
+const errors = ref({
+  username: '',
+  email: '',
+  password: ''
+})
+
+const loading = ref(false)
+
+const emailregex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const passwordregex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+
+const validate = () => {
+  let isValid = true
+
+  errors.value = {
     username: '',
     email: '',
     password: ''
-  });
-  const errorMessage = ref('');
-  const emailregex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const passwordregex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
-  const createUser = async() => {
-    // Logic to create user
-    if (!form.value.email || !form.value.password) {
-      errorMessage.value = 'Vui lòng điền tất cả các trường.';
-      return;
-    }
-    if (!emailregex.test(form.value.email)) {
-      errorMessage.value = 'Định dạng email không hợp lệ.';
-      return;
-    }
-    if (!passwordregex.test(form.value.password)) {
-      errorMessage.value = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm cả chữ cái và số.';
-      return;
-    };
-    await axiosInstance.post('/users/createUser',{
+  }
+
+  if (!form.value.username) {
+    errors.value.username = 'Vui lòng nhập tên người dùng'
+    isValid = false
+  }
+
+  if (!form.value.email) {
+    errors.value.email = 'Vui lòng nhập email'
+    isValid = false
+  } else if (!emailregex.test(form.value.email.trim())) {
+    errors.value.email = 'Email không hợp lệ'
+    isValid = false
+  }
+
+  if (!form.value.password) {
+    errors.value.password = 'Vui lòng nhập mật khẩu'
+    isValid = false
+  } else if (!passwordregex.test(form.value.password)) {
+    errors.value.password = 'Mật khẩu phải ≥ 8 ký tự, gồm chữ và số'
+    isValid = false
+  }
+
+  return isValid
+}
+
+const createUser = async () => {
+  if (!validate()) return
+
+  loading.value = true
+
+  try {
+    const res = await axiosInstance.post('/users/createUser', {
       username: form.value.username,
       email: form.value.email,
       password: form.value.password
     })
-    .then((response) => {
-      console.log('Người dùng được tạo thành công:', response.data);
-      // Reset form and error message
-      form.value.username = '';
-      form.value.email = '';
-      form.value.password = '';
-      errorMessage.value = '';
-    })
-    .catch((error) => {
-      console.error('Lỗi khi tạo người dùng:', error);
-      errorMessage.value = 'Đã xảy ra lỗi khi tạo người dùng.';
-    });
-  };
+    console.log(res.data)
+    if (!res.data.success) {
+      alertService('error',res.data.message)
+
+    }
+    else{
+        router.push({ name: 'UserDashboard' })
+    }
+
+
+  } catch (err) {
+    alertService('error',err.response.data.message)
+  } finally {
+    loading.value = false
+  }
+}
 </script>
+
 <style scoped>
 .register-layout {
   min-height: 100vh;
@@ -112,38 +167,33 @@
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
 }
 
-.register-box h2 {
-  text-align: center;
-  margin-bottom: 25px;
-  font-size: 24px;
-  color: #1f2937;
-  font-weight: 600;
-}
-
 .form-group {
   margin-bottom: 18px;
   display: flex;
   flex-direction: column;
 }
 
-.form-group label {
-  font-size: 14px;
-  margin-bottom: 6px;
-  color: #4b5563;
-}
-
 .form-group input {
   padding: 11px 14px;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
-  font-size: 14px;
   transition: 0.25s;
   outline: none;
 }
 
+.form-group input.invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
 .form-group input:focus {
   border-color: #4F46E5;
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.error-message {
+  margin-top: 6px;
+  color: #ef4444;
+  font-size: 13px;
 }
 
 .btn-register {
@@ -154,37 +204,35 @@
   border: none;
   background: #4F46E5;
   color: white;
-  font-size: 15px;
-  font-weight: 500;
   cursor: pointer;
-  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-register:hover {
-  background: #4338CA;
+.btn-register:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.error-message {
-  margin-top: 12px;
-  color: #ef4444;
-  font-size: 14px;
-  text-align: center;
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid white;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .register-footer {
   margin-top: 20px;
   text-align: center;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.register-footer a {
-  color: #4F46E5;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.register-footer a:hover {
-  text-decoration: underline;
 }
 </style>

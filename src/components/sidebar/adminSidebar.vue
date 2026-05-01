@@ -32,14 +32,6 @@
             Báo cáo
           </router-link>
         </li>
-
-        <li>
-          <router-link to="/admin/vocabulary" class="nav-link">
-            <i class="bi bi-book me-2"></i>
-            Quản lý từ vựng
-          </router-link>
-        </li>
-
         <li>
           <router-link to="/admin/flashcards" class="nav-link">
             <i class="bi bi-card-text me-2"></i>
