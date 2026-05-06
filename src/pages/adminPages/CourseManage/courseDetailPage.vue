@@ -212,8 +212,9 @@ const lessonError = ref('');
 const lessonForm = ref({ title: '', description: '' });
 const editingLessonId = ref(null);
 const goToAddLessonPage = (courseId) => {
+  console.log("courseId", courseId)
   if (courseId) {
-     router.push(`/admin/courses/${courseId}/add-lesson`)
+    router.push({name: 'AddLesson',params: {courseId: courseId}})
   }
 };
 async function fetchCourse() {

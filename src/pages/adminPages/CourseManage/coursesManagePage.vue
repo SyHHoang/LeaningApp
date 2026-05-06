@@ -12,9 +12,9 @@
     <div class="row g-3">
       <div class="col-md-4" v-for="list in courseList" :key="list._id">
 
-        <div class="card h-100 shadow-sm" @click="GotoLessonManagePage(list._id)">
+        <div class="card h-100 shadow-sm">
 
-          <img class="card-img-top"
+          <img class="card-img-top"  @click="GotoLessonManagePage(list._id)"
                :src="list.imgUrl"
                style="height:160px; object-fit:cover;" />
 
@@ -31,7 +31,9 @@
                  @click="openFormDelete(list._id)">
               </i>
             </div>
+            <div>
 
+            </div>
           </div>
         </div>
 
@@ -45,22 +47,21 @@
        class="modal fade show d-block bg-dark bg-opacity-50">
 
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-
+      <div class="modal-content" v-if="!isLoading">
         <div class="modal-header">
           <h5 class="modal-title">Xóa khóa học</h5>
           <button class="btn-close" @click="rejectDelete"></button>
         </div>
-
         <div class="modal-body">
           <p>Bạn có chắc chắn muốn xóa khóa học này không?</p>
         </div>
-
         <div class="modal-footer">
           <button class="btn btn-secondary" @click="rejectDelete">Hủy</button>
           <button class="btn btn-danger" @click="deleteCourse">Xác nhận</button>
         </div>
-
+      </div>
+      <div v-else>
+        <loadingComponent></loadingComponent>
       </div>
     </div>
   </div>
@@ -86,7 +87,12 @@
               <label class="form-label">Tên khóa học</label>
               <input type="text" class="form-control" v-model="form.name"/>
             </div>
-
+            <div>
+              <label class="form-label">Danh mục</label>
+              <select v-model="form.category">
+                <option v-for="element in categoryList" :key="element._id" :value=element._id>{{ element.name }}</option>
+              </select>
+            </div>
             <div class="mb-3">
               <label class="form-label">Ảnh minh họa</label>
               <input type="file" class="form-control" accept="image/*" @change="onFileChange"/>
@@ -122,13 +128,16 @@ import router from '@/router/index.js'
 import axiosInstance from '@/services/axiosService'
 import 'vue-toastification/dist/index.css'
 import sendImageKit from '@/services/imageService'
+import loadingComponent from '@/components/loadingComponent.vue'
 const form=ref({
   _id:null,
   name:null,
+  category:null,
   imgUrl:null,
   imgId:"",
   description:"",
 })
+const categoryList=ref([])
 const imageUrlLocal=ref(null)
 const file=ref()
 const addModalStatus=ref(false)
@@ -136,6 +145,7 @@ const deleteModalStatus=ref(false)
 const courseId=ref()
 const errMessage=ref('')
 const courseList=ref([])
+const isLoading=ref(false)
 const openFormDelete=(id)=>{
   deleteModalStatus.value=true
   courseId.value=id
@@ -149,12 +159,17 @@ const closeAddModal=()=>{
 
 //delete
 const deleteCourse=async()=>{
+  isLoading.value=true
   const res= await axiosInstance.delete(`/courses/${courseId.value}`)
   if(res.data.success){
     alert('Xóa thành công')
     courseId.value=''
+    isLoading.value=false
     getCourseList()
-  }
+    deleteModalStatus.value=false
+  }else{
+    isLoading.value=false
+    alert('Có lỗi xảy ra, xóa thất bại')}
 }
 const rejectDelete=()=>{
   deleteModalStatus.value=false
@@ -166,6 +181,11 @@ const GotoLessonManagePage=(id)=>{
 //get
 const getCourseList=async()=>{
   try{
+    const getCategory=await axiosInstance.get('courseCategories')
+    if(getCategory){
+      categoryList.value=getCategory.data.data
+      console.log('danh sách',courseList.value)
+    }
     const getList= await axiosInstance.get('/courses/')
     if(getList){
       courseList.value=getList.data.data
@@ -200,7 +220,8 @@ const addNewCourse=async()=>{
         name:form.value.name,
         description:form.value.description,
         imgUrl:form.value.imgUrl,
-        imgId:imagekit.fileId
+        imgId:imagekit.fileId,
+        category:form.value.category
       }
       console.log("data",data)
       //tạo mới khóa học

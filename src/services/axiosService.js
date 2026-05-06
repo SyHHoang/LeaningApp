@@ -28,28 +28,29 @@ axiosInstance.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       error.response?.data?.code === 'TOKEN_EXPIRED' &&
-      !originalRequest._retry//(chạy nếu !originalRequest._retry có giá trị là true tức là originalRequest._retry có giá trị là falsy )
+      !originalRequest._retry
     ) {
       originalRequest._retry = true;//tạo thuộc tính _retry  trong configđể tránh vòng lặp vô hạn nếu refresh token cũng hết hạn hoặc có lỗi khác
 
       try {
-        // ✅ withCredentials tự gửi refreshToken cookie lên backend
+        // withCredentials tự gửi refreshToken cookie lên backend
         //không dùng axiosInstance vì có interceptor
         //nếu gọi api refresh mà cái đó bị lỗi thì nó sẽ lặp vô hạn
         //đó là nếu giả sử  BE trả về các lỗi sau cho mọi route error.response?.status === 401 &&error.response?.data?.code === 'TOKEN_EXPIRED' && !originalRequest._retry
         await axios.post(
-          `${axiosInstance.defaults.baseURL}/auth/refresh`,
+          `${axiosInstance.defaults.baseURL}/refreshToken`,
           {},
           { withCredentials: true }
         );
 
-        // ✅ Retry request gốc, browser tự gắn accessToken cookie mới
+        // Retry request gốc, browser tự gắn accessToken cookie mới
         //gọi lại requeest cũ (gửi accessToken) với config mới
         //không dùng.get,.post nữa là vì trong config mới này đã có rồi
         //dùng axiosInsstance thay vì axios vì có intercepter
         return axiosInstance(originalRequest);//gửi config mới có thêm thuộc tính retry để tránh lặp
 
       } catch (err) {
+        console.log("err",err)
         console.error('Refresh token hết hạn → logout');
         window.location.href = '/login';
         return Promise.reject(err);

@@ -1,63 +1,61 @@
 <template>
-  <div class="exam-manager-page">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h3 mb-0">Quản lý đề thi</h1>
-      <router-link to="/admin/exams/add" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>
+  <div class="exam-container">
+    <div class="exam-header" >
+      <h2>Quản lý đề thi</h2>
+      <router-link to="/admin/exams/add" >
+        <i class="bi bi-plus"></i>
         Thêm Exam
       </router-link>
     </div>
-
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Đang tải...</span>
-      </div>
+    <hr>
+  <div class='exam-main-content'>
+    <div v-if="loading" >
+        <span>Đang tải...</span>
     </div>
 
-    <div v-else-if="error" class="alert alert-danger">
+    <div v-else-if="error" >
       {{ error }}
     </div>
-
-    <div v-else-if="examList.length === 0" class="card shadow-sm">
-      <div class="card-body text-center py-5 text-muted">
-        <i class="bi bi-journal-text display-4"></i>
-        <p class="mt-3 mb-0">Chưa có đề thi nào.</p>
-        <router-link to="/admin/exams/add" class="btn btn-primary mt-3">Thêm Exam</router-link>
+    <div v-else-if="examList.length === 0" >
+      <div >
+        <i ></i>
+        <p >Chưa có đề thi nào.</p>
+        <router-link to="/admin/exams/add" >Thêm Exam</router-link>
       </div>
     </div>
 
-    <div v-else class="table-responsive">
-      <table class="table table-hover align-middle">
-        <thead class="table-light">
+    <div v-else>
+      <h4 class="exam-list-title">Danh sách đề thi</h4>
+      <table class="exam-list-table">
+        <thead>
           <tr>
             <th>Tiêu đề</th>
             <th>Mức độ</th>
             <th>Số câu</th>
             <th>Thời gian (phút)</th>
             <th>Ngày tạo</th>
-            <th class="text-end">Thao tác</th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="exam in examList" :key="exam._id">
             <td>{{ exam.title }}</td>
             <td>
-              <span class="badge bg-secondary">{{ exam.level }}</span>
+              <span>{{ exam.level }}</span>
             </td>
             <td>{{ totalQuestions(exam) }}</td>
             <td>{{ totalDuration(exam) }}</td>
             <td>{{ formatDate(exam.createdAt) }}</td>
-            <td class="text-end">
+            <td class="action-item">
               <router-link
                 :to="{ name: 'EditExam', params: { id: exam._id } }"
-                class="btn btn-sm btn-outline-warning me-1"
+
                 title="Sửa đề thi"
               >
-                Xem chi tiết
+                <i class="bi bi-pencil"></i>
               </router-link>
               <button
                 type="button"
-                class="btn btn-sm btn-outline-danger"
                 title="Xóa đề thi"
                 @click="confirmDelete(exam)"
               >
@@ -68,66 +66,45 @@
         </tbody>
       </table>
     </div>
-
+</div>
     <!-- Modal xem chi tiết đề thi -->
     <div
       v-if="examToView"
-      class="modal d-block bg-dark bg-opacity-50"
+
       tabindex="-1"
       @click.self="examToView = null"
     >
-      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ examToView.title }} ({{ examToView.level }})</h5>
-            <button type="button" class="btn-close" @click="examToView = null"></button>
+      <div>
+        <div >
+          <div >
+            <h5 >{{ examToView.title }} ({{ examToView.level }})</h5>
+            <button type="button"  @click="examToView = null"></button>
           </div>
-          <div class="modal-body">
-            <div v-if="viewLoading" class="text-center py-4">
-              <div class="spinner-border text-primary"></div>
+          <div >
+            <div v-if="viewLoading" >
+              <div ></div>
             </div>
             <template v-else-if="examDetail">
-              <div class="mb-3">
-                <p class="mb-1"><strong>Tiêu đề:</strong> {{ examDetail.title }}</p>
-                <p class="mb-1"><strong>Mức độ:</strong> {{ examDetail.level }}</p>
-                <p class="mb-1"><strong>Số câu:</strong> {{ totalQuestions(examDetail) }}</p>
-                <p class="mb-1"><strong>Thời gian:</strong> {{ totalDuration(examDetail) }} phút</p>
-                <p class="mb-0"><strong>Cấu trúc:</strong> Từ vựng {{ examDetail.structure?.vocabulary?.count || 0 }} câu / {{ examDetail.structure?.vocabulary?.duration || 0 }} phút — Đọc {{ examDetail.structure?.reading?.count || 0 }} câu / {{ examDetail.structure?.reading?.duration || 0 }} phút — Nghe {{ examDetail.structure?.listening?.count || 0 }} câu / {{ examDetail.structure?.listening?.duration || 0 }} phút</p>
+              <div>
+                <p ><strong>Tiêu đề:</strong> {{ examDetail.title }}</p>
+                <p ><strong>Mức độ:</strong> {{ examDetail.level }}</p>
+                <p ><strong>Số câu:</strong> {{ totalQuestions(examDetail) }}</p>
+                <p ><strong>Thời gian:</strong> {{ totalDuration(examDetail) }} phút</p>
+                <p ><strong>Cấu trúc:</strong> Từ vựng {{ examDetail.structure?.vocabulary?.count || 0 }} câu / {{ examDetail.structure?.vocabulary?.duration || 0 }} phút — Đọc {{ examDetail.structure?.reading?.count || 0 }} câu / {{ examDetail.structure?.reading?.duration || 0 }} phút — Nghe {{ examDetail.structure?.listening?.count || 0 }} câu / {{ examDetail.structure?.listening?.duration || 0 }} phút</p>
               </div>
               <hr />
-              <h6 class="mb-2">Danh sách câu hỏi</h6>
-              <div class="view-questions-list">
-                <div
-                  v-for="(q, idx) in (examDetail.questionIds || [])"
-                  :key="q._id || idx"
-                  class="border rounded p-3 mb-2"
-                >
-                  <p class="mb-1"><strong>Câu {{ idx + 1 }}:</strong> {{ q.questionText || '—' }}</p>
-                  <img
-                    v-if="q.image?.imageUrl"
-                    :src="q.image.imageUrl"
-                    alt="Hình"
-                    class="img-thumbnail mb-1"
-                    style="max-height: 100px"
-                  />
-                  <audio v-if="q.audio.audioUrl" :src="q.audio.audioUrl" controls></audio>
-                  <p class="small mb-0">
-                    Đáp án đúng: {{ (q.options && q.options[q.correctAnswer]) || '—' }}
-                  </p>
-                </div>
-              </div>
             </template>
           </div>
-          <div class="modal-footer">
+          <div >
             <router-link
               v-if="examToView"
               :to="{ name: 'EditExam', params: { id: examToView._id } }"
-              class="btn btn-warning"
+
               @click="examToView = null"
             >
               Sửa đề thi
             </router-link>
-            <button type="button" class="btn btn-secondary" @click="examToView = null">Đóng</button>
+            <button type="button"  @click="examToView = null">Đóng</button>
           </div>
         </div>
       </div>
@@ -136,22 +113,22 @@
     <!-- Modal xác nhận xóa -->
     <div
       v-if="examToDelete"
-      class="modal d-block bg-dark bg-opacity-50"
+
       tabindex="-1"
       @click.self="examToDelete = null"
     >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Xác nhận xóa đề thi</h5>
-            <button type="button" class="btn-close" @click="examToDelete = null"></button>
+      <div>
+        <div>
+          <div>
+            <h5>Xác nhận xóa đề thi</h5>
+            <button type="button"  @click="examToDelete = null"></button>
           </div>
-          <div class="modal-body">
+          <div>
             Bạn có chắc muốn xóa đề thi <strong>{{ examToDelete.title }}</strong> ({{ examToDelete.level }})?
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="examToDelete = null">Hủy</button>
-            <button type="button" class="btn btn-danger" @click="doDelete">Xóa</button>
+          <div>
+            <button type="button"  @click="examToDelete = null">Hủy</button>
+            <button type="button"  @click="doDelete">Xóa</button>
           </div>
         </div>
       </div>
@@ -234,12 +211,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.exam-manager-page {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-.view-questions-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
+@import '../../../style/admin/exam/examManagerStyle.css'
 </style>
