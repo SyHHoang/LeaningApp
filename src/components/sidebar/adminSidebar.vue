@@ -27,9 +27,9 @@
         </li>
 
         <li>
-          <router-link to="/admin/reports" class="nav-link">
+          <router-link to="/admin/categories" class="nav-link">
             <i class="bi bi-graph-up me-2"></i>
-            Báo cáo
+            Quản lý Danh mục khóa học
           </router-link>
         </li>
         <li>
@@ -42,3 +42,5 @@
     </aside>
   </div>
 </template>
+<style scoped>
+</style>

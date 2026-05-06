@@ -1,0 +1,48 @@
+
+.exam-header{
+  display: flex;
+  position: sticky;
+  justify-content: space-between;
+
+}
+.exam-main-content {
+  display: flex;
+  justify-content: center;
+
+}
+.exam-main-content div{
+  display: flex;
+  width: 100%;
+  padding-top:10px;
+  flex-direction: column;
+  align-items: stretch;
+}
+.exam-main-content div span{
+  text-align: center;
+}
+.exam-list-title{
+  text-align: center;
+}
+.exam-list-table{
+  border-collapse: collapse;
+  width: 100%;
+}
+.exam-list-table th, td{
+  border: 1px solid #333;
+  padding: 8px;
+}
+.action-item{
+  display: flex;
+  justify-content: space-around;
+}
+.action-item button{
+  border: 0px;
+}
+.exam-header a{
+  display: inline-block;
+  padding: 10px 16px;
+  background:purple;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+}

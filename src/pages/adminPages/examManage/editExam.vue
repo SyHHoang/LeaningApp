@@ -1,13 +1,8 @@
 <template>
   <div class="add-exam-page">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h1 class="h3 mb-0">Thêm đề thi</h1>
-      <router-link to="/admin/exams" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>
-        Quay lại danh sách
-      </router-link>
-    </div>
-    <p>Thông tin đề thi</p>
+  <div class="exam-title">
+    <h3>Thông tin đề thi</h3>
+    <div>
     <label>Tên đề thi</label>
     <input type="text" v-model="examInfo.title">
     <label>Trình độ</label>
@@ -20,39 +15,51 @@
         <option value="C2">C2</option>
         <option value="None">None</option>
     </select>
-    <div>
-      <button @click="openForm(1,'',null)">Thêm phần thi</button>
     </div>
+    <button @click="openForm(1,'',null)" class="add-part-btn">Thêm phần thi</button>
+  </div>
+
     <!-- List -->
     <div>
         <div v-if="partList.length === 0">Chưa có phần nào</div>
         <div v-else>
-          <div v-for="(part, index) in partList" :key="index">
-
-            <p>Phần {{ index + 1 }} </p>
-         <div>
-        <button @click="openForm(4,part,index,null,null)">Sửa</button>
-        <button @click="deleteForm(1,index,null,null)">Xóa</button>
-        <button v-if="part.type==='many'" @click="openForm(2,null,index,null,null)">Thêm khối câu hỏi</button>
-        <button v-if="part.type==='one'" @click="openForm(3,null,index,null,null)">Thêm câu hỏi</button>
-        </div>
+         <div v-for="(part, index) in partList" :key="index">
+          <div class="exam-block-header">
+            <h4 class="exam-part-title">Phần {{ index + 1 }} </h4>
+          <div class="btn-list">
+            <button @click="openForm(4,part,index,null,null)">Sửa</button>
+            <button @click="deleteForm(1,index,null,null)">Xóa</button>
+            <button v-if="part.type==='many'" @click="openForm(2,null,index,null,null)">Thêm khối câu hỏi</button>
+            <button v-if="part.type==='one'" @click="openForm(3,null,index,null,null)">Thêm câu hỏi</button>
+          </div>
+         </div>
+         <hr>
+          <div>
             <p><b>Tiêu đề:</b> {{ part.title }}</p>
             <p><b>Loại:</b> {{ part.type==='one'?'Câu hỏi đơn':'Khối câu hỏi' }}</p>
             <p><b>Nội dung:</b> {{ part.content }}</p>
             <p><b>Thời gian:</b> {{ part.time }} (phút)</p>
             <div v-if="part.imageUrlLocal||part.imageUrl">
-              <img :src="part.imageUrlLocal||part.imageUrl"" style="max-width:200px"/>
+              <img :src="part.imageUrlLocal||part.imageUrl" style="max-width:200px"/>
             </div>
             <div v-if="part.audioUrlLocal||part.audioUrl">
               <audio :src="part.audioUrlLocal||part.audioUrl" controls></audio>
             </div>
+          </div>
             <hr/>
             <!-- Danh sách khối câu hỏi -->
                   <div v-if="part.type==='many'">
                       <div class="block-list" v-for="(block,blockIndex) in part.questionList" :key="blockIndex">
-                          <div class="block"><p>{{ block.content }}</p><button @click="openForm(5,block,index,blockIndex,null)">Sửa</button>
-                            <button @click="deleteForm(2,index,null,null)">Xóa</button>
-                          <img v-if="block.imageUrlLocal||block.imageUrl" :src="block.imageUrlLocal||block.imageUrl" style="max-width:200px"/>
+                            <div>
+                              <div class="block">
+                              <div class="question-block-title">
+                                <p>Câu hỏi khối:</p>
+                                <button @click="openForm(5,block,index,blockIndex,null)">Sửa</button>
+                                <button @click="deleteForm(2,index,null,null)">Xóa</button>
+                              </div>
+                                <p><strong>Nội dung: </strong>{{ block.content }}</p>
+                             </div>
+                            <img v-if="block.imageUrlLocal||block.imageUrl" :src="block.imageUrlLocal||block.imageUrl" style="max-width:200px"/>
                           <audio v-if="block.audioUrlLocal||block.audioUrl" :src="block.audioUrlLocal||block.audioUrl" controls></audio>
                           <button @click="openForm(7,null,index,blockIndex,null)">Thêm câu hỏi con</button></div>
                           <div class="block-question" v-for="(question,questionIndex) in block.question" :key='questionIndex'>
@@ -83,8 +90,6 @@
                   </div>
           </div>
         </div>
-    </div>
-    <div>
     </div>
     <!-- ///////////////Phần modal -->
     <div v-if="partModalStatus" class="form">
@@ -297,16 +302,16 @@ const examInfo=ref({
 /////////////////////////
 //edit list
 const addPartList=ref([])//block, question part mới thêm sẽ được push vào đây
-const updatePartList=ref([])
-const deletePartList=ref([])
+// const updatePartList=ref([])
+// const deletePartList=ref([])
 
 const addBlockList=ref([])
-const updateBlockList=ref([])
-const deleteBlockList=ref([])
+// const updateBlockList=ref([])
+// const deleteBlockList=ref([])
 
-const addQuestionList=ref([])
-const updateQuestionList=ref([])
-const deleteQuestionList=ref([])
+// const addQuestionList=ref([])
+// const updateQuestionList=ref([])
+// const deleteQuestionList=ref([])
 /////////////////////////
 const partModalStatus=ref(false)
 const blockModalStatus=ref(false)
@@ -773,25 +778,8 @@ onMounted(() => {
 
 </script>
 
-<style scoped>
-.form{
-  display: flex;
-  flex-direction: column;
-  max-width: 500px;
-}
-.block{
-  display:flex;
-  flex-direction:column;
-}
-.block-list{
-  display:flex;
-  flex-direction:row;
-
-}
-.block-question{
-  display:flex;
-  flex-direction:column;
-}
+<style>
+@import '../../../style/admin/exam/editExamStyle.css'
 </style>
 
 

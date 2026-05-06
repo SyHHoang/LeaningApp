@@ -58,6 +58,11 @@ export default [
         path:'flashcards/:id'
         ,name:'FlashCardManage',
         component: () => import('@/pages/adminPages/flashCard/flashCardManage.vue'),
+      },
+      {
+        path:'categories'
+        ,name:'categories',
+        component: ()=> import('@/pages/adminPages/CourseManage/courseCategoryManager.vue')
       }
     ],
   },
