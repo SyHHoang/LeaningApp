@@ -32,7 +32,7 @@
           <span v-if="loading" class="spinner"></span>
           <span>{{ loading ? 'Đang đăng nhập...' : 'Đăng nhập' }}</span>
         </button>
-
+        <input class="remmemberme-checkbox" type="checkbox" name="dong_y" v-model="rememberMe"> Duy trì đăng nhập 30 ngày
       </form>
 
       <p class="login-footer">
@@ -48,10 +48,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axiosInstance from '@/services/axiosService.js'
+//mport { userStore } from '@/stores/userSetting'
 //import GoogleLoginButton from '@/components/auth/googleLoginButton.vue'
 
 const router = useRouter()
-
+const rememberMe=ref(false)
 const form = ref({
   email:'',
   password:''
@@ -69,11 +70,16 @@ const login = async () => {
     if (handleError(form.value.email, form.value.password)) return
 
     loading.value = true
-
-    const res = await axiosInstance.post('users/login', form.value)
+    const data={
+      email:form.value.email,
+      password:form.value.password,
+      rememberMe:rememberMe.value
+    }
+    const res = await axiosInstance.post('users/login', data)
     console.log("res là", res)
 
     if (res.data.success)
+      //userStore.changeData(res.data.userId)
       router.push(`/${res.data.role}`)
 
   } catch (err) {
@@ -240,5 +246,9 @@ const handleError = (email, password) => {
 
 .login-footer a:hover {
   text-decoration: underline;
+}
+.remmemberme-checkbox{
+  margin:10px;
+  padding:5px
 }
 </style>

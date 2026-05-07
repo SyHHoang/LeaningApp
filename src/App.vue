@@ -1,14 +1,32 @@
 <script setup>
-import { userStore } from './stores/userSetting.js'
+//import { userStore } from './stores/userSetting.js'
 import {onMounted} from 'vue'
-import axiosInstance from './services/axiosService.js';
-const user = userStore()
-const fetchPublicFlashCard = async () => {
-  const res = await axiosInstance.get('/cardLists/public')
-  user.publicFlashCard = res.data
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+//const user = userStore()
+const router=useRouter()
+const autoLogin = async () => {
+ try{
+  const res = await axios.post(
+  `${import.meta.env.VITE_API_URL}/users/a/login`,
+  {},
+  {
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    withCredentials: true,
+  }
+)
+  if(res.data.success)
+    {
+        router.push(`/${res.data.role}`)
+    }}
+  catch(err){
+    console.log(err)
+  }
 }
-
-onMounted(fetchPublicFlashCard)
+onMounted(autoLogin)
 </script>
 
 <template>

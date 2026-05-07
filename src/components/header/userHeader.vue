@@ -20,12 +20,12 @@
 
         <div class="user-menu" ref="menuRef">
           <div class="user-icon" @click="toggleMenu">
-            <i class="fas fa-user"></i>
+            <i class="bi bi-person"></i>
           </div>
 
           <div v-if="showMenu" class="dropdown">
             <router-link to="/auth/login">Thông tin cá nhân</router-link>
-            <router-link to="/auth/register">Đăng xuất</router-link>
+            <button @click="logout">Đăng xuất</button>
           </div>
         </div>
 
@@ -35,8 +35,11 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
+import axiosInstance from "@/services/axiosService";
 import { ref, onMounted, onBeforeUnmount } from "vue";
-
+import Cookies from 'js-cookie'
+const router=useRouter()
 const showMenu = ref(false);
 const menuRef = ref(null);
 
@@ -50,7 +53,17 @@ const handleClickOutside = (event) => {
     showMenu.value = false;
   }
 };
-
+const logout=async()=>{
+    const res=await axiosInstance.post('/auth/logout')
+    if(res.data.success){
+      router.push({name:'home'})
+    }
+    else{
+     Cookies.remove('accessToken')
+     Cookies.remove('refreshToken')
+     router.push({name:'home'})
+    }
+}
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
 });
