@@ -36,9 +36,9 @@
 
 <script setup>
 import { useRouter } from "vue-router";
-import axiosInstance from "@/services/axiosService";
+import axios from "axios";
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import Cookies from 'js-cookie'
+import { alertService } from "@/services/alertService";
 const router=useRouter()
 const showMenu = ref(false);
 const menuRef = ref(null);
@@ -54,14 +54,21 @@ const handleClickOutside = (event) => {
   }
 };
 const logout=async()=>{
-    const res=await axiosInstance.post('/auth/logout')
+    const res=await axios.post(`${import.meta.env.VITE_API_URL}/users/logout`,
+{},
+  {
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    withCredentials: true,
+  }
+    )
     if(res.data.success){
       router.push({name:'home'})
     }
     else{
-     Cookies.remove('accessToken')
-     Cookies.remove('refreshToken')
-     router.push({name:'home'})
+      alertService('error','Lỗi Server, đăng xuất thất bại')
     }
 }
 onMounted(() => {
