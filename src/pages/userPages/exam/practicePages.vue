@@ -10,8 +10,7 @@
     <div>
       <div v-if="partList.length === 0">Chưa có phần nào</div>
       <div v-else>
-
-    <div><button @click="getResults">Nộp bài</button></div>
+        <div><button @click="getResults">Nộp bài</button></div>
         <div v-for="(part, index) in partList" :key="index">
           <p @click="goToPart(index)">
             <b>Phần {{ index + 1 }}. {{ part.title }} </b>
@@ -36,7 +35,7 @@
                 :key="blockIndex"
               >
                 <div class="block">
-                  <p> {{ block.content }}</p>
+                  <p>{{ block.content }}</p>
                   <img
                     v-if="block.imageUrlLocal || block.imageUrl"
                     :src="block.imageUrlLocal || block.imageUrl"
@@ -52,15 +51,13 @@
                     v-for="(question, questionIndex) in block.question"
                     :key="questionIndex"
                   >
-                    <p>
-                      {{question.index}}. {{ question.questionText }}
-                    </p>
+                    <p>{{ question.index }}. {{ question.questionText }}</p>
                     <div v-for="(option, optionIndex) in question.options" :key="optionIndex">
                       <input
                         type="radio"
                         :name="question.index"
                         v-model="question.userAnswer"
-                        :value="optionIndex+1"
+                        :value="optionIndex + 1"
                       />
                       {{ answer[optionIndex] }}. {{ option }}<br />
                     </div>
@@ -90,7 +87,7 @@
                     type="radio"
                     :name="question.index"
                     v-model="question.userAnswer"
-                    :value="optionIndex+1"
+                    :value="optionIndex + 1"
                   />
                   {{ answer[optionIndex] }}. {{ n }}
                 </div>
@@ -102,7 +99,6 @@
     </div>
     <div></div>
     <!-- ///////////////-->
-
   </div>
 </template>
 
@@ -110,7 +106,7 @@
 import axiosInstance from '@/services/axiosService'
 import { alertService } from '@/services/alertService'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute,useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 const examId = computed(() => route.params.id)
@@ -118,7 +114,7 @@ const startTime = ref(null)
 const submitTime = ref(null)
 const userExamInfo = ref({
   examId: examId.value,
-  time:0,
+  time: 0,
 })
 const answer = ['A', 'B', 'C', 'D']
 const timeLeft = ref(0)
@@ -151,32 +147,31 @@ const loadExam = async () => {
     partList.value = res.data.data
     console.log('partList', partList.value)
     let counter = 1
-      partList.value.forEach((part) => {
-        console.log('part', part)
-        if(part.type === 'one') {
-          questionPartCountList.value.push(part.questionList.length)
-          console.log('questionPartCountList',part.questionList.length)
-          part.questionList.forEach((element)=>{
-            element.index=counter
-            element.userAnswer = null
+    partList.value.forEach((part) => {
+      console.log('part', part)
+      if (part.type === 'one') {
+        questionPartCountList.value.push(part.questionList.length)
+        console.log('questionPartCountList', part.questionList.length)
+        part.questionList.forEach((element) => {
+          element.index = counter
+          element.userAnswer = null
+          counter++
+          // answerList.push(...part.questionList)
+        })
+      } else {
+        let totalQuestion = 0
+        part.questionList.forEach((element) => {
+          totalQuestion += element.question.length
+          console.log('totalQuestion', totalQuestion)
+          element.question.map((question) => {
+            question.index = counter
+            question.userAnswer = null
             counter++
-            // answerList.push(...part.questionList)
-            })}
-        else{
-          let totalQuestion=0
-          part.questionList.forEach((element) => {
-                totalQuestion+= element.question.length
-                console.log('totalQuestion', totalQuestion)
-                element.question.map((question) => {
-                question.index=counter
-                question.userAnswer = null
-                 counter++
-                })
-
-              })
-            questionPartCountList.value.push(totalQuestion)
-            }
-      })
+          })
+        })
+        questionPartCountList.value.push(totalQuestion)
+      }
+    })
 
     timeLeft.value = examInfo.value.totalTime * 60 || 0
     console.log('answerList', answerList)
@@ -189,66 +184,64 @@ const fommatTime = (time) => {
   const seconds = time % 60
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
 }
-const getResults = async() => {
+const getResults = async () => {
   submitTime.value = Date.now()
-  partList.value.forEach((part)=>{
-    if(part.type === 'one') {
-          part.questionList.forEach((element)=>{
-            answerList.push({
-              partId: part._id,
-              index: element.index,
-              userAnswer: element.userAnswer,
-              type: part.type,
-              questionText: element.questionText,
-              correctAnswer: element.correctAnswer,
-              imageUrl: element.imageUrl,
-              audioUrl: element.audioUrl,
-              options: element.options,
-              explanation: element.explaination,
-              score: element.score,
+  partList.value.forEach((part) => {
+    if (part.type === 'one') {
+      part.questionList.forEach((element) => {
+        answerList.push({
+          partId: part._id,
+          index: element.index,
+          userAnswer: element.userAnswer,
+          type: part.type,
+          questionText: element.questionText,
+          correctAnswer: element.correctAnswer,
+          imageUrl: element.imageUrl,
+          audioUrl: element.audioUrl,
+          options: element.options,
+          explanation: element.explaination,
+          score: element.score,
+        })
+        // answerList.push(...part.questionList)
+      })
+    } else {
+      part.questionList.forEach((element) => {
+        element.question.map((question) => {
+          answerList.push({
+            partId: part._id,
+            index: question.index,
+            type: part.type,
+            userAnswer: question.userAnswer,
+            blockOrder: element.order,
+            blockContent: element.content,
+            blockImage: element.imageUrl,
+            blockAudio: element.audioUrl,
+            questionText: question.questionText,
+            correctAnswer: question.correctAnswer,
+            options: question.options,
+            explanation: question.explaination,
+            score: question.score,
           })
-            // answerList.push(...part.questionList)
-            })}
-        else{
-          part.questionList.forEach((element) => {
-
-                element.question.map((question) => {
-                  answerList.push({
-                    partId: part._id,
-                    index: question.index,
-                    type: part.type,
-                    userAnswer: question.userAnswer,
-                    blockOrder: element.order,
-                    blockContent: element.content,
-                    blockImage: element.imageUrl,
-                    blockAudio: element.audioUrl,
-                    questionText: question.questionText,
-                    correctAnswer: question.correctAnswer,
-                    options: question.options,
-                    explanation: question.explaination,
-                    score: question.score,})
-                })
-
-              })
-            }
+        })
+      })
+    }
   })
   alert('Nộp bài thành công!')
   let correctCount = 0
   let totalScore = 0
-  answerList.forEach((item)=>{
-    if(item.userAnswer !== null){
-
-      item.resuilt = 0//chưa điền
+  answerList.forEach((item) => {
+    if (item.userAnswer !== null) {
+      item.resuilt = 0 //chưa điền
     }
-    if(item.userAnswer === item.correctAnswer){
-      correctCount+=1
-      totalScore+=item.score
-      item.resuilt = 1//đúng
-    }else{
-      item.resuilt = 2//sai
+    if (item.userAnswer === item.correctAnswer) {
+      correctCount += 1
+      totalScore += item.score
+      item.resuilt = 1 //đúng
+    } else {
+      item.resuilt = 2 //sai
     }
   })
-  const data={
+  const data = {
     correctCount: correctCount,
     answersList: answerList,
     questionPartCountList: questionPartCountList.value,
@@ -259,14 +252,14 @@ const getResults = async() => {
     totalScore: totalScore,
   }
   console.log('data', data)
-  const res=await axiosInstance.post(`/userExam/${examId.value}`, data)
-  if(res.data.status === 'success'){
-    alertService('success','Nộp bài thành công!')
-  router.push({name:'ExamResultPage', params:{id:examId.value}})
-  console.log('answerList', answerList)
-}else{
-  alertService('error','Nộp bài thất bại!')
-}
+  const res = await axiosInstance.post(`/userExam/${examId.value}`, data)
+  if (res.data.status === 'success') {
+    alertService('success', 'Nộp bài thành công!')
+    router.push({ name: 'ExamResultPage', params: { id: res.data.data._id } })
+    console.log('answerList', answerList)
+  } else {
+    alertService('error', 'Nộp bài thất bại!')
+  }
 }
 onMounted(() => {
   if (examId.value) loadExam()

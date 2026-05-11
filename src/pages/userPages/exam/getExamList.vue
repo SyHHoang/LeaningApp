@@ -1,17 +1,17 @@
 <template>
   <div class="exam-manager-page">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <p><input type="text" placeholder="Tìm kiếm đề thi..." v-model="searchTerm" /> <i class="bi bi-search" @click="doSearch"></i>
+    <div class="search-bar">
+      <p><input type="text" placeholder="Tìm kiếm đề thi..." v-model="searchTerm" />
       </p>
-      <p> Mức độ:
-        <select v-model="filterLevel" @change="doSearch" class="form-select form-select-sm w-auto">
+      <p> Mức độ:</p>
+        <select v-model="filterLevel" class="form-select form-select-sm w-auto">
         <option value="">Tất cả mức độ</option>
         <option value="Dễ">Dễ</option>
         <option value="Trung bình">Trung bình</option>
         <option value="Khó">Khó</option>
-      </select>
-      </p>
+       </select>
 
+      <i class="bi bi-search" @click="fetchExams(1)"></i>
     </div>
 
     <div v-if="loading" class="text-center py-5">
@@ -28,7 +28,6 @@
       <div class="card-body text-center py-5 text-muted">
         <i class="bi bi-journal-text display-4"></i>
         <p class="mt-3 mb-0">Chưa có đề thi nào.</p>
-        <router-link to="/admin/exams/add" class="btn btn-primary mt-3">Thêm Exam</router-link>
       </div>
     </div>
 
@@ -57,9 +56,9 @@
               <router-link
                 :to="{ name: 'PracticePage', params: { id: exam._id } }"
                 class="btn btn-sm btn-outline-warning me-1"
-                title="Sửa đề thi"
+                title="đề thi"
               >
-                Xem chi tiết
+                Làm bài
               </router-link>
             </td>
           </tr>
@@ -67,123 +66,31 @@
       </table>
     </div>
 
-    <!-- Modal xem chi tiết đề thi -->
-    <div
-      v-if="examToView"
-      class="modal d-block bg-dark bg-opacity-50"
-      tabindex="-1"
-      @click.self="examToView = null"
-    >
-      <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">{{ examToView.title }} ({{ examToView.level }})</h5>
-            <button type="button" class="btn-close" @click="examToView = null"></button>
-          </div>
-          <div class="modal-body">
-            <div v-if="viewLoading" class="text-center py-4">
-              <div class="spinner-border text-primary"></div>
-            </div>
-            <template v-else-if="examDetail">
-              <div class="mb-3">
-                <p class="mb-1"><strong>Tiêu đề:</strong> {{ examDetail.title }}</p>
-                <p class="mb-1"><strong>Mức độ:</strong> {{ examDetail.level }}</p>
-                <p class="mb-1"><strong>Số câu:</strong> {{ totalQuestions(examDetail) }}</p>
-                <p class="mb-1"><strong>Thời gian:</strong> {{ totalDuration(examDetail) }} phút</p>
-                <p class="mb-0"><strong>Cấu trúc:</strong> Từ vựng {{ examDetail.structure?.vocabulary?.count || 0 }} câu / {{ examDetail.structure?.vocabulary?.duration || 0 }} phút — Đọc {{ examDetail.structure?.reading?.count || 0 }} câu / {{ examDetail.structure?.reading?.duration || 0 }} phút — Nghe {{ examDetail.structure?.listening?.count || 0 }} câu / {{ examDetail.structure?.listening?.duration || 0 }} phút</p>
-              </div>
-              <hr />
-              <h6 class="mb-2">Danh sách câu hỏi</h6>
-              <div class="view-questions-list">
-                <div
-                  v-for="(q, idx) in (examDetail.questionIds || [])"
-                  :key="q._id || idx"
-                  class="border rounded p-3 mb-2"
-                >
-                  <p class="mb-1"><strong>Câu {{ idx + 1 }}:</strong> {{ q.questionText || '—' }}</p>
-                  <img
-                    v-if="q.image?.imageUrl"
-                    :src="q.image.imageUrl"
-                    alt="Hình"
-                    class="img-thumbnail mb-1"
-                    style="max-height: 100px"
-                  />
-                  <audio v-if="q.audio.audioUrl" :src="q.audio.audioUrl" controls></audio>
-                  <p class="small mb-0">
-                    Đáp án đúng: {{ (q.options && q.options[q.correctAnswer]) || '—' }}
-                  </p>
-                </div>
-              </div>
-            </template>
-          </div>
-          <div class="modal-footer">
-            <router-link
-              v-if="examToView"
-              :to="{ name: 'EditExam', params: { id: examToView._id } }"
-              class="btn btn-warning"
-              @click="examToView = null"
-            >
-              Sửa đề thi
-            </router-link>
-            <button type="button" class="btn btn-secondary" @click="examToView = null">Đóng</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal xác nhận xóa -->
-    <div
-      v-if="examToDelete"
-      class="modal d-block bg-dark bg-opacity-50"
-      tabindex="-1"
-      @click.self="examToDelete = null"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Xác nhận xóa đề thi</h5>
-            <button type="button" class="btn-close" @click="examToDelete = null"></button>
-          </div>
-          <div class="modal-body">
-            Bạn có chắc muốn xóa đề thi <strong>{{ examToDelete.title }}</strong> ({{ examToDelete.level }})?
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="examToDelete = null">Hủy</button>
-            <button type="button" class="btn btn-danger" @click="doDelete">Xóa</button>
-          </div>
-        </div>
-      </div>
+    <div class='nav-exam-page'>
+    <nav>
+      <i class="bi bi-chevron-left"></i>
+      <span v-for="page in totalPage" :key="page" @click="fetchExams(page)"
+      class="exam-page"
+      >{{ page }}</span>
+    <i class="bi bi-chevron-right"></i>
+    </nav>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRoute,useRouter } from 'vue-router';
 import axiosInstance from '@/services/axiosService';
 //const router = useRouter();
 const examList = ref([]);
 const loading = ref(true);
+const totalPage=ref(0)
 const error = ref('');
-const examToDelete = ref(null);
-const examToView = ref(null);
-const examDetail = ref(null);
-const viewLoading = ref(false);
 const searchTerm = ref('');
 const filterLevel = ref('');
-async function doSearch() {
-  const term = searchTerm.value.trim().toLowerCase();
-  const level = filterLevel.value;
-  const res= await axiosInstance.get('/exams', {
-    params: {
-      search: term,
-      level: level
-    }
-  });
-  if (res.data?.success && Array.isArray(res.data.data)) {
-    examList.value = res.data.data;
-  } else {    examList.value = [];
-  }
-}
+const route=useRoute()
+const router=useRouter()
 function totalQuestions(exam) {
   const s = exam.structure || {};
   return (s.vocabulary?.count || 0) + (s.reading?.count || 0) + (s.listening?.count || 0);
@@ -199,15 +106,35 @@ function formatDate(dateStr) {
   const d = new Date(dateStr);
   return d.toLocaleDateString('vi-VN');
 }
-
-async function fetchExams() {
+function changeURL(page){
+  const URL={page:page}
+  const term = searchTerm.value.trim().toLowerCase();
+  if(filterLevel.value) URL.level=filterLevel.value
+  if(term ) URL.term=term
+  router.push({
+        query:URL
+      })
+}
+async function fetchExams(page) {
   loading.value = true;
+  const term = searchTerm.value.trim().toLowerCase();
   error.value = '';
   try {
     console.log('Đang gọi API /exams để lấy danh sách đề thi');
-    const res = await axiosInstance.get('/exams');
+    const res = await axiosInstance.get('/exams',
+      {
+        params:{
+          page:page||1,
+          level:filterLevel.value||'None',
+          search: term,
+        }
+      }
+    );
     if (res.data?.success && Array.isArray(res.data.data)) {
+      changeURL(page)
       examList.value = res.data.data;
+      totalPage.value=res.data.totalPage
+      console.log(examList.value)
     } else {
       examList.value = [];
     }
@@ -221,7 +148,10 @@ async function fetchExams() {
 }
 
 onMounted(() => {
-  fetchExams();
+  const oldPage=route.query.page||1
+  searchTerm.value=route.query.term||''
+  filterLevel.value=route.query.level
+  fetchExams(oldPage);
 });
 </script>
 
@@ -233,5 +163,79 @@ onMounted(() => {
 .view-questions-list {
   max-height: 400px;
   overflow-y: auto;
+}
+.search-bar{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    width: fit-content;
+}
+.search-bar p{
+    margin: 0;
+    font-weight: 500;
+    color: #333;
+}
+
+.search-bar input{
+    width: 260px;
+    padding: 10px 14px;
+
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+
+    outline: none;
+    font-size: 15px;
+
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus{
+    border-color: #396fcd;
+    box-shadow: 0 0 0 3px rgba(57,111,205,0.2);
+}
+
+.search-bar select{
+    padding: 8px 12px;
+
+    border-radius: 10px;
+    border: 1px solid #dcdcdc;
+
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.search-bar select:focus{
+    border-color: #396fcd;
+    box-shadow: 0 0 0 3px rgba(57,111,205,0.2);
+}
+
+.search-bar i{
+    font-size: 20px;
+    color: white;
+    background: #396fcd;
+    padding: 5px 5px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.search-bar i:hover{
+    background: #2857ad;
+    transform: scale(1.05);
+}
+.nav-exam-page{
+  display:flex;
+  justify-self: center;
+}
+.exam-page{
+  border: 1px solid black;
+  border-radius: 3px;
+  padding:2px;
+  margin:4px
+}
+.exam-page:hover{
+  background-color:blue;
+  color:white
 }
 </style>

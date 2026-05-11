@@ -133,10 +133,8 @@
 import { ref, onMounted, onUnmounted } from "vue"
 import { useRoute } from "vue-router"
 import axiosInstance from "@/services/axiosService"
-
 const route = useRoute()
 const examId = route.params.id
-
 const data = ref(null)
 const loading = ref(true)
 const error = ref(null)
@@ -197,7 +195,7 @@ const getUserAnswerText = () => {
 
   const userAnswer = selectedQuestion.value.userAnswer
   const options = selectedQuestion.value.options
-
+  console.log("userAnsswer",userAnswer)
   if (userAnswer === undefined || userAnswer === null || userAnswer === -1) {
     return "Bỏ qua"
   }
@@ -207,8 +205,8 @@ const getUserAnswerText = () => {
     return answers.join("; ")
   }
 
-  if (userAnswer >= 0 && userAnswer < options.length) {
-    return `${String.fromCharCode(65 + userAnswer)}. ${options[userAnswer]}`
+  if (userAnswer >0 && userAnswer <= options.length) {
+    return `${String.fromCharCode(64 + userAnswer)}. ${options[userAnswer-1]}`
   }
 
   return "Không xác định"

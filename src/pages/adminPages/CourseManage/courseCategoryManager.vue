@@ -3,121 +3,92 @@
     <h2 class="title">Quản lý danh mục khóa học</h2>
 
     <div class="create-box">
-      <input
-        v-model="newCategory"
-        placeholder="Nhập tên danh mục..."
-        class="input"
-      />
-      <button class="btn primary" @click="createCategory">
-        Thêm
-      </button>
+      <input v-model="newCategory" placeholder="Nhập tên danh mục..." class="input" />
+      <button class="btn primary" @click="createCategory">Thêm</button>
     </div>
 
     <ul class="list">
       <li v-for="cat in categories" :key="cat._id" class="card">
-
         <div class="left">
           <span v-if="editId !== cat._id" class="name">
             {{ cat.name }}
           </span>
 
-          <input
-            v-else
-            v-model="editName"
-            class="input edit"
-          />
+          <input v-else v-model="editName" class="input edit" />
         </div>
 
         <div class="actions">
-          <button
-            v-if="editId !== cat._id"
-            class="btn edit"
-            @click="startEdit(cat)"
-          >
-            Sửa
-          </button>
+          <button v-if="editId !== cat._id" class="btn edit" @click="startEdit(cat)">Sửa</button>
 
-          <button
-            v-else
-            class="btn save"
-            @click="updateCategory(cat._id)"
-          >
-            Lưu
-          </button>
+          <button v-else class="btn save" @click="updateCategory(cat._id)">Lưu</button>
 
-          <button
-            class="btn delete"
-            @click="deleteCategory(cat._id)"
-          >
-            Xóa
-          </button>
+          <button class="btn delete" @click="deleteCategory(cat._id)">Xóa</button>
         </div>
-
       </li>
     </ul>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import axiosInstance from "@/services/axiosService";
+import { ref, onMounted } from 'vue'
+import axiosInstance from '@/services/axiosService'
 
-const categories = ref([]);
-const newCategory = ref("");
-const editId = ref(null);
-const editName = ref("");
+const categories = ref([])
+const newCategory = ref('')
+const editId = ref(null)
+const editName = ref('')
 
 const fetchCategories = async () => {
   try {
-    const res = await axiosInstance.get("courseCategories");
-    categories.value = res.data.data;
+    const res = await axiosInstance.get('courseCategories')
+    categories.value = res.data.data
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 
 const createCategory = async () => {
-  if (!newCategory.value.trim()) return;
+  if (!newCategory.value.trim()) return
 
   try {
-    await axiosInstance.post("courseCategories", {
-      name: newCategory.value
-    });
-    newCategory.value = "";
-    fetchCategories();
+    await axiosInstance.post('courseCategories', {
+      name: newCategory.value,
+    })
+    newCategory.value = ''
+    fetchCategories()
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 
 const deleteCategory = async (id) => {
   try {
-    await axiosInstance.delete(`courseCategories/${id}`);
-    fetchCategories();
+    await axiosInstance.delete(`courseCategories/${id}`)
+    fetchCategories()
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 
 const startEdit = (cat) => {
-  editId.value = cat._id;
-  editName.value = cat.name;
-};
+  editId.value = cat._id
+  editName.value = cat.name
+}
 
 const updateCategory = async (id) => {
   try {
     await axiosInstance.put(`courseCategories/${id}`, {
-      name: editName.value
-    });
-    editId.value = null;
-    editName.value = "";
-    fetchCategories();
+      name: editName.value,
+    })
+    editId.value = null
+    editName.value = ''
+    fetchCategories()
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 
-onMounted(fetchCategories);
+onMounted(fetchCategories)
 </script>
 
 <style scoped>
@@ -147,7 +118,7 @@ onMounted(fetchCategories);
 .card {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  flex-direction: row;
   background: #f9f9f9;
   padding: 12px 16px;
   border-radius: 10px;
@@ -230,4 +201,5 @@ onMounted(fetchCategories);
 .btn.delete:hover {
   background: #b02a37;
 }
+
 </style>

@@ -1,9 +1,7 @@
 <template>
   <div class="container">
     <!-- Loading -->
-    <div v-if="loading" class="loading">
-      Đang tải chi tiết khóa học...
-    </div>
+    <div v-if="loading" class="loading">Đang tải chi tiết khóa học...</div>
 
     <!-- Error -->
     <div v-else-if="error" class="error">
@@ -19,20 +17,17 @@
 
       <h2>Danh sách bài học</h2>
 
-      <div v-if="course.lesson.length === 0">
-        Chưa có bài học nào
-      </div>
+      <div v-if="course.lesson.length === 0">Chưa có bài học nào</div>
 
       <ul v-else class="lesson-list">
-<li
-  v-for="lesson in course.lesson"
-  :key="lesson._id"
-  @click="goToLesson(lesson._id)"
-  style="cursor: pointer;"
->
-  <h3>{{ lesson.title }}</h3>
-  <p>{{ lesson.description }}</p>
-</li>
+        <li
+          v-for="lesson,index in course.lesson"
+          :key="lesson._id"
+          @click="goToLesson(lesson._id,index)"
+          style="cursor: pointer"
+        >
+          <h3><strong>Bài {{index+1}}. </strong>{{ lesson.title }}</h3>
+        </li>
       </ul>
     </div>
   </div>
@@ -43,30 +38,34 @@ import { ref, onMounted } from 'vue'
 import axiosInstance from '@/services/axiosService'
 import { useRoute } from 'vue-router'
 import { useRouter } from 'vue-router'
+import { lessonStore } from '@/stores/lessonManage'
 const router = useRouter()
 const route = useRoute()
 const courseId = route.params.id
 const course = ref(null)
 const loading = ref(false)
 const error = ref(null)
-
+const lesson= lessonStore()
 const fetchCourseDetail = async () => {
   loading.value = true
   error.value = null
 
   try {
-    const res = await axiosInstance.get(
-      `courses/${courseId}`
-    )
+    const res = await axiosInstance.get(`courses/${courseId}`)
 
     course.value = res.data.data
+  const lessonIdList=course.value.lesson.map((lesson)=>{
+    return lesson._id
+  })
+  lesson.fetchData(lessonIdList)
   } catch (err) {
     error.value = err.response?.data?.message || 'Lỗi server'
   } finally {
     loading.value = false
   }
 }
-const goToLesson = (id) => {
+const goToLesson = (id,index) => {
+  lesson.getIndex(index)
   router.push({ name: 'LessonDetailPage', params: { id } })
 }
 onMounted(fetchCourseDetail)

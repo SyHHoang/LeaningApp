@@ -1,5 +1,4 @@
 import axios from 'axios';
-
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
   timeout: 10000,
@@ -13,7 +12,6 @@ axiosInstance.interceptors.request.use(
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
-    console.log('Bắt đầu gửi Api');
     return config;
   },
   (error) => Promise.reject(error)
@@ -21,10 +19,10 @@ axiosInstance.interceptors.request.use(
 
 // Response Interceptor
 axiosInstance.interceptors.response.use(
-  (response) => {console.log('Nhận được phản hồi từ Api'); return response; },
+  (response) => { return response; },
   async (error) => {
     const originalRequest = error.config;
-
+    console.log("error trong axios",error.response)
     if (
       error.response?.status === 401 &&
       error.response?.data?.code === 'TOKEN_EXPIRED' &&
@@ -40,7 +38,11 @@ axiosInstance.interceptors.response.use(
         await axios.post(
           `${axiosInstance.defaults.baseURL}/refreshToken`,
           {},
-          { withCredentials: true }
+          {    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    withCredentials: true, }
         );
 
         // Retry request gốc, browser tự gắn accessToken cookie mới
@@ -51,8 +53,7 @@ axiosInstance.interceptors.response.use(
 
       } catch (err) {
         console.log("err",err)
-        console.error('Refresh token hết hạn → logout');
-        window.location.href = '/login';
+        window.location.href = 'auth/login';
         return Promise.reject(err);
       }
     }

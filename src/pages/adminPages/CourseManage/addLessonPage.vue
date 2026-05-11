@@ -112,9 +112,9 @@
     </div>
 
     <!-- Modal: Block Form -->
-    <div v-if="openBlockStatus" class="modal-overlay" @click.self="openBlockStatus = false">
-      <div class="modal">
-        <div class="modal-header">
+    <div v-if="openBlockStatus" class="modal-overlay-custom" @click.self="openBlockStatus = false">
+      <div class="modal-div">
+        <div class="modal-header-div">
           <h3>Thêm khối mới</h3>
           <button @click="openBlockStatus = false" class="modal-close">×</button>
         </div>
@@ -140,9 +140,9 @@
     </div>
 
     <!-- Modal: Block Content Form -->
-    <div v-if="openBlockContentStatus" class="modal-overlay" @click.self="closeBlockContent">
-      <div class="modal modal-lg">
-        <div class="modal-header">
+    <div v-if="openBlockContentStatus" class="modal-overlay-custom" @click.self="closeBlockContent">
+      <div class="modal-div">
+        <div class="modal-header-div">
           <h3>{{ isAddBlock ? 'Thêm nội dung' : 'Sửa nội dung' }}</h3>
           <button @click="closeBlockContent" class="modal-close">×</button>
         </div>
@@ -175,9 +175,9 @@
     </div>
 
     <!-- Modal: Question Form -->
-    <div v-if="questionStatus" class="modal-overlay" @click.self="questionStatus = false">
-      <div class="modal modal-lg">
-        <div class="modal-header">
+    <div v-if="questionStatus" class="modal-overlay-custom" @click.self="questionStatus = false">
+      <div class="modal-div">
+        <div class="modal-header-div">
           <h3>Thêm câu hỏi mới</h3>
           <button @click="questionStatus = false" class="modal-close">×</button>
         </div>

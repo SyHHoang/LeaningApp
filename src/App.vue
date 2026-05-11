@@ -7,6 +7,9 @@ import axios from 'axios';
 const router=useRouter()
 const autoLogin = async () => {
  try{
+  const isntFirst = sessionStorage.getItem('AUTO_LOGIN_KEY')
+  if(isntFirst) return
+  else   sessionStorage.setItem('AUTO_LOGIN_KEY', 'true')
   const res = await axios.post(
   `${import.meta.env.VITE_API_URL}/users/a/login`,
   {},
@@ -21,12 +24,18 @@ const autoLogin = async () => {
   if(res.data.success)
     {
         router.push(`/${res.data.role}`)
+
     }}
   catch(err){
     console.log(err)
   }
 }
-onMounted(autoLogin)
+onMounted(async()=>{
+    autoLogin()
+
+}
+
+  )
 </script>
 
 <template>

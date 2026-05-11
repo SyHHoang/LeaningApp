@@ -1,0 +1,31 @@
+.page-title{
+  display: flex;
+  justify-content: center;
+}
+.search-bar{
+  max-width: 80%;
+  margin: 0 auto;
+}
+.search-element *{
+  margin:5px
+}
+.exam-history-list{
+  display: grid;
+  max-width: 80%;
+  margin: 0 auto;
+  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+  gap: 10px
+}
+.exam-history-item{
+  border: 1px solid black;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.exam-history-item:hover{
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+}
